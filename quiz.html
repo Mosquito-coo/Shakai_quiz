@@ -786,7 +786,7 @@ const QUIZ_DATA = {
 ═══════════════════════════════════════════════ */
 let db = null;
 try {
-  firebase.initializeApp(FIREBASE_CONFIG);
+  firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
 } catch(e) {
   console.warn("Firebase未設定:", e.message);
