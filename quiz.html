@@ -104,7 +104,1237 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--ink);min-height:100vh;bac
   font-size:13px;font-family:'Noto Sans JP',sans-serif;position:relative;}
 .ord-evt:hover:not(.selected):not(.disabled){border-color:var(--navy);background:var(--navy-light);}
 .ord-kana{font-weight:700;font-family:'Noto Serif JP',serif;color:var(--navy);
+  width:20px;flex-shrink:0;font-size:15px;<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>社会 確認テスト</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+:root {
+  --paper:#f7f4ee; --card:#fffffe; --ink:#1c1c1c;
+  --navy:#1e3054; --red:#8b1a1a; --border:#c5bba8;
+  --light:#888; --line:#e5ddd0; --green:#1a5c1a;
+  --navy-light:#e8edf5; --red-light:#f9eaea;
+  --green-light:#e8f5e8;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{background:var(--paper);}
+body{font-family:'Noto Sans JP',sans-serif;color:var(--ink);min-height:100vh;background:var(--paper);}
+
+/* ── スクリーン ── */
+.screen{display:none;min-height:100vh;padding:28px 16px 60px;}
+.screen.active{display:block;}
+
+/* ── 共通タイトル ── */
+.page-head{text-align:center;margin-bottom:24px;}
+.page-head h1{font-family:'Noto Serif JP',serif;font-size:22px;font-weight:700;color:var(--navy);
+  border-bottom:2px solid var(--red);display:inline-block;padding-bottom:4px;letter-spacing:.1em;}
+.page-head p{font-size:13px;color:var(--light);margin-top:6px;}
+
+/* ════════ 開始画面 ════════ */
+.start-wrap{max-width:400px;margin:0 auto;}
+.start-card{background:var(--card);border:1.5px solid var(--border);padding:28px 24px;margin-top:4px;}
+.start-card label{display:block;font-size:12px;font-weight:700;color:var(--navy);margin-bottom:5px;margin-top:16px;
+  text-transform:uppercase;letter-spacing:.08em;}
+.start-card label:first-child{margin-top:0;}
+.start-card input[type=text], .start-card input[type=password]{
+  width:100%;border:1.5px solid var(--border);padding:9px 12px;font-size:15px;
+  font-family:'Noto Sans JP',sans-serif;outline:none;background:#fffffe;
+  transition:border .15s;}
+.start-card input:focus{border-color:var(--navy);}
+.unit-options{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.unit-opt{border:1.5px solid var(--border);padding:10px 14px;cursor:pointer;
+  display:flex;align-items:center;gap:10px;transition:all .15s;background:var(--card);}
+.unit-opt:hover,.unit-opt.selected{border-color:var(--navy);background:var(--navy-light);}
+.unit-opt.selected .unit-check{background:var(--navy);border-color:var(--navy);}
+.unit-check{width:16px;height:16px;border:1.5px solid var(--border);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.unit-check::after{content:'';display:none;width:8px;height:8px;background:#fff;}
+.unit-opt.selected .unit-check::after{display:block;}
+.unit-opt-info{flex:1;}
+.unit-opt-title{font-size:13px;font-weight:700;color:var(--navy);}
+.unit-opt-sub{font-size:11px;color:var(--light);margin-top:1px;}
+.start-btn{margin-top:22px;width:100%;background:var(--navy);color:#fff;border:none;
+  padding:13px;font-size:15px;font-family:'Noto Serif JP',serif;font-weight:700;
+  cursor:pointer;letter-spacing:.1em;transition:background .15s;}
+.start-btn:hover{background:#162340;}
+.err-msg{font-size:12px;color:var(--red);margin-top:8px;text-align:center;}
+
+/* ════════ クイズ画面 ════════ */
+.quiz-wrap{max-width:580px;margin:0 auto;}
+.quiz-bar{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+.quiz-back{background:none;border:1.5px solid var(--border);padding:5px 12px;
+  font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--light);}
+.quiz-back:hover{border-color:var(--navy);color:var(--navy);}
+.bar-wrap{flex:1;}
+.bar-label{font-size:11px;color:var(--light);margin-bottom:3px;}
+.bar-track{height:6px;background:#ddd;}
+.bar-fill{height:100%;background:var(--navy);transition:width .4s;}
+.score-pill{font-size:12px;font-weight:700;color:var(--navy);background:var(--navy-light);
+  padding:4px 10px;white-space:nowrap;border:1px solid #b8c8df;}
+
+.q-card{background:var(--card);border:1.5px solid var(--border);padding:20px 20px 16px;margin-bottom:12px;}
+.q-type{font-size:10px;font-weight:700;letter-spacing:.1em;padding:2px 8px;border:1px solid;
+  display:inline-block;margin-bottom:12px;}
+.q-type.mc{color:var(--navy);border-color:var(--navy);background:var(--navy-light);}
+.q-type.ord{color:var(--red);border-color:var(--red);background:var(--red-light);}
+.q-text{font-family:'Noto Serif JP',serif;font-size:15px;line-height:1.8;font-weight:400;}
+
+/* 問題画像 */
+.q-img-wrap{margin:10px 0 14px;text-align:center;}
+.q-img{max-height:180px;max-width:100%;object-fit:contain;border:1px solid var(--border);}
+
+/* 4択 */
+.choices{display:flex;flex-direction:column;gap:8px;margin-top:16px;}
+.ch-btn{display:flex;align-items:center;gap:10px;border:1.5px solid var(--border);
+  padding:10px 14px;background:var(--card);cursor:pointer;transition:all .15s;
+  font-size:14px;font-family:'Noto Sans JP',sans-serif;text-align:left;}
+.ch-btn:hover:not(:disabled){border-color:var(--navy);background:var(--navy-light);}
+.ch-lbl{font-weight:700;font-family:'Noto Serif JP',serif;color:var(--navy);
+  width:20px;flex-shrink:0;}
+.ch-btn.correct{border-color:var(--green);background:var(--green-light);}
+.ch-btn.correct .ch-lbl{color:var(--green);}
+.ch-btn.wrong{border-color:var(--red);background:var(--red-light);}
+.ch-btn.wrong .ch-lbl{color:var(--red);}
+.ch-btn.dim{border-color:#ddd;background:#f8f8f8;color:#aaa;}
+.ch-btn:disabled{cursor:default;}
+
+/* 並べ替え */
+.ord-instruct{font-size:12px;color:var(--light);margin-top:10px;margin-bottom:14px;
+  border-left:3px solid var(--border);padding-left:8px;line-height:1.6;}
+.ord-events{display:flex;flex-direction:column;gap:8px;}
+.ord-evt{display:flex;align-items:center;gap:10px;border:1.5px solid var(--border);
+  padding:10px 14px;background:var(--card);cursor:pointer;transition:all .15s;
+  font-size:13px;font-family:'Noto Sans JP',sans-serif;position:relative;}
+.ord-evt:hover:not(.selected):not(.disabled){border-color:var(--navy);background:var(--navy-light);}
+.ord-kana{font-weight:700;font-family:'Noto Serif JP',serif;color:var(--navy);
   width:20px;flex-shrink:0;font-size:15px;}
+.ord-num{margin-left:auto;width:24px;height:24px;border:1.5px solid transparent;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
+  flex-shrink:0;transition:all .15s;}
+.ord-evt.selected{border-color:var(--navy);background:var(--navy-light);}
+.ord-evt.selected .ord-num{border-color:var(--navy);color:var(--navy);}
+.ord-evt.correct{border-color:var(--green);background:var(--green-light);}
+.ord-evt.wrong-place{border-color:var(--red);background:var(--red-light);}
+.ord-evt.disabled{cursor:default;}
+.ord-actions{display:flex;gap:8px;margin-top:10px;}
+.ord-reset{background:none;border:1.5px solid var(--border);padding:6px 12px;
+  font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--light);}
+.ord-reset:hover{border-color:var(--red);color:var(--red);}
+.ord-submit{background:var(--navy);color:#fff;border:none;padding:8px 18px;
+  font-size:13px;font-family:'Noto Serif JP',serif;font-weight:700;cursor:pointer;
+  display:none;transition:background .15s;}
+.ord-submit:hover{background:#162340;}
+
+/* フィードバック */
+.feedback{margin-top:12px;padding:12px 14px;border-left:4px solid;font-size:13px;line-height:1.7;}
+.feedback.correct{border-color:var(--green);background:var(--green-light);color:#1a3a1a;}
+.feedback.wrong{border-color:var(--red);background:var(--red-light);color:#5a1a1a;}
+.feedback-head{font-weight:700;font-size:14px;margin-bottom:4px;}
+.feedback-ans{margin-top:4px;font-size:12px;}
+.feedback-exp{margin-top:6px;font-size:12px;color:var(--light);}
+.next-btn{width:100%;background:var(--navy);color:#fff;border:none;padding:13px;
+  font-size:15px;font-family:'Noto Serif JP',serif;font-weight:700;cursor:pointer;
+  margin-top:10px;letter-spacing:.08em;transition:background .15s;display:none;}
+.next-btn:hover{background:#162340;}
+
+/* ════════ 結果画面 ════════ */
+.result-wrap{max-width:520px;margin:0 auto;}
+.result-card{background:var(--card);border:1.5px solid var(--border);padding:28px 24px;text-align:center;margin-bottom:16px;}
+.result-stamp{width:90px;height:90px;border-radius:50%;border:4px solid;margin:0 auto 16px;
+  display:flex;align-items:center;justify-content:center;font-size:32px;font-family:'Noto Serif JP',serif;}
+.result-stamp.great{border-color:var(--green);color:var(--green);}
+.result-stamp.good{border-color:var(--navy);color:var(--navy);}
+.result-stamp.try{border-color:var(--red);color:var(--red);}
+.result-score{font-family:'Noto Serif JP',serif;font-size:44px;font-weight:700;color:var(--ink);}
+.result-score span{font-size:18px;color:var(--light);}
+.result-pct{font-size:14px;color:var(--light);margin-top:4px;}
+.result-msg{font-size:15px;font-weight:700;margin-top:14px;color:var(--navy);}
+
+.result-tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:16px;}
+.rtab{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:700;cursor:pointer;
+  color:var(--light);border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;}
+.rtab.active{color:var(--navy);border-color:var(--navy);}
+.rtab-content{display:none;}
+.rtab-content.active{display:block;}
+
+.wrong-list{display:flex;flex-direction:column;gap:8px;}
+.wrong-item{background:var(--red-light);border-left:4px solid var(--red);padding:10px 14px;font-size:13px;}
+.wrong-q{font-family:'Noto Serif JP',serif;font-size:13px;margin-bottom:4px;}
+.wrong-a{color:var(--green);font-weight:700;font-size:12px;}
+.wrong-yours{color:var(--red);font-size:11px;margin-top:2px;}
+.no-wrong{text-align:center;padding:20px;color:var(--light);font-size:14px;}
+
+.result-actions{display:flex;flex-direction:column;gap:10px;margin-top:16px;}
+.res-btn{border:none;padding:13px;font-size:14px;font-family:'Noto Serif JP',serif;
+  font-weight:700;cursor:pointer;letter-spacing:.08em;transition:all .15s;}
+.res-btn.primary{background:var(--navy);color:#fff;}
+.res-btn.primary:hover{background:#162340;}
+.res-btn.review{background:var(--red);color:#fff;}
+.res-btn.review:hover{background:#6a1010;}
+.res-btn.back{background:var(--card);color:var(--navy);border:1.5px solid var(--navy);}
+.res-btn.back:hover{background:var(--navy-light);}
+.res-btn:disabled{background:#ccc;cursor:default;}
+
+/* ════════ 単元選択画面 ════════ */
+.select-wrap{max-width:500px;margin:0 auto;}
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px;}
+.cat-card{background:var(--card);border:1.5px solid var(--border);padding:24px 16px;
+  cursor:pointer;text-align:center;transition:all .15s;}
+.cat-card:hover:not(.empty){border-color:var(--navy);background:var(--navy-light);}
+.cat-card.empty{opacity:.55;cursor:default;}
+.cat-title{font-family:'Noto Serif JP',serif;font-size:17px;font-weight:700;color:var(--navy);margin-bottom:6px;}
+.cat-count{font-size:11px;color:var(--light);}
+.cat-empty-tag{font-size:10px;color:var(--light);border:1px solid var(--border);
+  display:inline-block;padding:1px 7px;margin-top:4px;}
+.unit-section{display:none;}
+.unit-section.active{display:block;}
+.unit-sec-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.unit-sec-title{font-family:'Noto Serif JP',serif;font-size:15px;font-weight:700;
+  color:var(--navy);border-left:4px solid var(--navy);padding-left:8px;}
+.back-cat-btn{background:none;border:1.5px solid var(--border);padding:6px 14px;
+  font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;color:var(--light);}
+.back-cat-btn:hover{border-color:var(--navy);color:var(--navy);}
+.unit-cards{display:flex;flex-direction:column;gap:10px;}
+.unit-card{background:var(--card);border:1.5px solid var(--border);padding:16px 18px;
+  cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:space-between;}
+.unit-card:hover{border-color:var(--navy);background:var(--navy-light);}
+.unit-card-title{font-weight:700;font-size:14px;color:var(--navy);}
+.unit-card-sub{font-size:11px;color:var(--light);margin-top:2px;}
+.unit-card-q{font-size:11px;color:var(--mid);margin-top:2px;}
+.unit-card-arrow{font-size:20px;color:var(--border);flex-shrink:0;}
+
+/* ════════ 復習モードバナー ════════ */
+.review-banner{background:var(--red);color:#fff;text-align:center;padding:8px;font-size:13px;
+  font-family:'Noto Serif JP',serif;font-weight:700;letter-spacing:.08em;margin-bottom:16px;}
+
+/* ════════ ローディング ════════ */
+.saving{text-align:center;font-size:13px;color:var(--light);padding:8px;margin-top:8px;}
+</style>
+</head>
+<body>
+
+<!-- ══ 開始 ══ -->
+<div class="screen active" id="s-start">
+  <div class="start-wrap">
+    <div class="page-head">
+      <h1>社会　復習</h1>
+      <p>名前とクラスコードを入力してください</p>
+    </div>
+    <div class="start-card">
+      <label>名前</label>
+      <input type="text" id="inp-name" placeholder="例：山田 太郎" autocomplete="off">
+      <label style="margin-top:16px;">クラスコード</label>
+      <input type="password" id="inp-code">
+      <div class="err-msg" id="start-err"></div>
+      <button class="start-btn" onclick="tryStart()">復習開始</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 単元選択 ══ -->
+<div class="screen" id="s-select">
+  <div class="select-wrap">
+    <div class="page-head">
+      <h1>単元を選ぶ</h1>
+    </div>
+    <div class="cat-grid" id="cat-grid"></div>
+    <div class="unit-section" id="unit-section">
+      <div class="unit-sec-head">
+        <button class="back-cat-btn" onclick="showCategories()">← 分野に戻る</button>
+        <div class="unit-sec-title" id="unit-sec-title"></div>
+      </div>
+      <div class="unit-cards" id="unit-cards"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ クイズ ══ -->
+<div class="screen" id="s-quiz">
+  <div class="quiz-wrap">
+    <div class="review-banner" id="review-banner" style="display:none">復習モード（不正解問題のみ）</div>
+    <div class="quiz-bar">
+      <button class="quiz-back" onclick="confirmBack()">← 戻る</button>
+      <div class="bar-wrap">
+        <div class="bar-label" id="bar-label">問題 1 / 15</div>
+        <div class="bar-track"><div class="bar-fill" id="bar-fill" style="width:0%"></div></div>
+      </div>
+      <div class="score-pill" id="score-pill">0 正解</div>
+    </div>
+    <div class="q-card" id="q-card"></div>
+    <button class="next-btn" id="next-btn" onclick="nextQ()">次の問題 →</button>
+  </div>
+</div>
+
+<!-- ══ 結果 ══ -->
+<div class="screen" id="s-result">
+  <div class="result-wrap">
+    <div class="page-head"><h1>結果</h1></div>
+    <div class="result-card" id="result-card"></div>
+    <div class="result-tabs">
+      <div class="rtab active" onclick="switchTab('wrong')">間違えた問題</div>
+      <div class="rtab" onclick="switchTab('all')">全問一覧</div>
+    </div>
+    <div class="rtab-content active" id="tab-wrong"></div>
+    <div class="rtab-content" id="tab-all"></div>
+    <div class="saving" id="saving-msg"></div>
+    <div class="result-actions">
+      <button class="res-btn review" id="review-btn" onclick="startReview()">間違えた問題だけ復習する</button>
+      <button class="res-btn primary" onclick="restartSame()">同じ単元をもう一度</button>
+      <button class="res-btn back" onclick="goStart()">単元選択に戻る</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Firebase SDK ══ -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+/* ═══════════════════════════════════════════════
+   ★ 設定　← ここを変更してください
+═══════════════════════════════════════════════ */
+const CLASS_CODE = "2025YAMA"; // 生徒に伝えるクラスコード（自由に変更可）
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBgxeXCoCC3TG001PV5bvU1bDwNPZQYiiQ",
+  authDomain: "shakai-quiz.firebaseapp.com",
+  projectId: "shakai-quiz",
+  storageBucket: "shakai-quiz.firebasestorage.app",
+  messagingSenderId: "862032502793",
+  appId: "1:862032502793:web:e242256970c227259498d8",
+  measurementId: "G-HQ01RWPX9J"
+};
+/* ═══════════════════════════════════════════════
+   問題データ
+═══════════════════════════════════════════════ */
+const QUIZ_DATA = {
+  categories: [
+    { id:"world-geo", title:"世界地理", units:[] },
+    { id:"japan-geo", title:"日本地理", units:[] },
+    {
+      id:"history", title:"歴史",
+      units: [
+        {
+          id: "edo4",
+          displayOrder: 2,
+          title: "開国と江戸幕府の滅亡",
+          subtitle: "江戸時代④",
+          questions: [
+        // ── 4択 ──
+        {
+          type:"mc4", qn:1,
+          q:"ペリーが来航した際に停泊した港はどこか。",
+          choices:["横浜（神奈川）","浦賀（神奈川）","下田（静岡）","函館（北海道）"],
+          answer:1,
+          explanation:"1853年、アメリカのペリーは浦賀（神奈川）に来航して開国を要求した。"
+        },
+        {
+          type:"mc4", qn:2,
+          q:"日米和親条約（1854年）で開港された2港はどれか。",
+          choices:["横浜・函館","下田・長崎","下田・函館","浦賀・下田"],
+          answer:2,
+          explanation:"下田（静岡）と函館（北海道）の２港が開港された。"
+        },
+        {
+          type:"mc4", qn:3,
+          q:"日米修好通商条約（1858年）を大老として締結した人物は誰か。",
+          choices:["徳川慶喜","坂本龍馬","吉田松陰","井伊直弼"],
+          answer:3,
+          explanation:"大老・井伊直弼が天皇の許可を得ずに条約を締結した。"
+        },
+        {
+          type:"mc4", qn:4,
+          q:"日米修好通商条約に含まれる不平等な内容として正しいものはどれか。",
+          choices:[
+            "日本が軍事費を負担する",
+            "日本に関税自主権がなく、治外法権（領事裁判権）を認めた",
+            "日本の領土を一部割譲する",
+            "毎年賠償金を支払う"
+          ],
+          answer:1,
+          explanation:"外国人が日本の法律で裁かれない「治外法権」と、輸入品の税率を自国で決められない「関税自主権のなさ」が日本に不利な内容だった。"
+        },
+        {
+          type:"mc4", qn:5,
+          q:"安政の大獄（1858年）で処刑された、松下村塾を開いた長州藩の思想家は誰か。",
+          choices:["高杉晋作","木戸孝允","西郷隆盛","吉田松陰"],
+          answer:3,
+          explanation:"吉田松陰は松下村塾を開き高杉晋作・木戸孝允らを育てたが、安政の大獄で処刑された。"
+        },
+        {
+          type:"mc4", qn:6,
+          q:"桜田門外の変（1860年）で何が起きたか。",
+          choices:[
+            "将軍が退位した",
+            "天皇が京都を脱出した",
+            "井伊直弼が暗殺された",
+            "薩摩藩がイギリスと戦争した"
+          ],
+          answer:2,
+          explanation:"水戸藩などの浪士が、安政の大獄を断行した井伊直弼を江戸城の桜田門外で暗殺した。"
+        },
+        {
+          type:"mc4", qn:7,
+          q:"公武合体策の具体例として行われたことはどれか。",
+          choices:[
+            "将軍が外国へ使節を送った",
+            "天皇の妹・和宮が14代将軍・徳川家茂に嫁いだ",
+            "幕府が外国との条約を破棄した",
+            "朝廷が幕府に戦争を宣言した"
+          ],
+          answer:1,
+          explanation:"桜田門外の変で権威を失った幕府は、天皇家と武家（幕府）の協力体制（公武合体）を図り、和宮を将軍家茂に降嫁させた。"
+        },
+        {
+          type:"mc4", qn:8,
+          q:"生麦事件をきっかけに1863年に起きた戦争はどれか。",
+          choices:["薩長戦争","薩英戦争","薩仏戦争","薩米戦争"],
+          answer:1,
+          explanation:"大名行列を横切ったイギリス人が殺傷された生麦事件への報復として、イギリスが薩摩に砲撃した薩英戦争が起きた。"
+        },
+        {
+          type:"mc4", qn:9,
+          q:"薩長同盟（1866年）を仲介した土佐藩出身の人物は誰か。",
+          choices:["西郷隆盛","大久保利通","坂本龍馬","高杉晋作"],
+          answer:2,
+          explanation:"土佐藩（高知）の坂本龍馬が対立していた薩摩藩と長州藩を仲介し、薩長同盟を成立させた。"
+        },
+        {
+          type:"mc4", qn:10,
+          q:"大政奉還（1867年）を行い、政権を朝廷に返上した15代将軍は誰か。",
+          choices:["徳川家茂","徳川家康","徳川吉宗","徳川慶喜"],
+          answer:3,
+          explanation:"1867年10月、15代将軍・徳川慶喜が政権を朝廷に返上した（大政奉還）。これにより約260年続いた江戸幕府が滅亡した。"
+        },
+        {
+          type:"mc4", qn:11,
+          q:"王政復古の大号令で目指されたこととして正しいのはどれか。",
+          choices:[
+            "徳川家が引き続き政治を行う",
+            "外国との貿易をすべて禁止する",
+            "天皇を中心とする新政府を樹立する",
+            "将軍を新たに選出する"
+          ],
+          answer:2,
+          explanation:"大政奉還後、朝廷が「天皇を中心とする新政府を樹立する」と宣言したのが王政復古の大号令である。"
+        },
+        {
+          type:"mc4", qn:12,
+          q:"長州藩の倒幕運動を主導した人物として正しい組み合わせはどれか。",
+          choices:[
+            "西郷隆盛・大久保利通",
+            "坂本龍馬・吉田松陰",
+            "高杉晋作・木戸孝允",
+            "高杉晋作・西郷隆盛"
+          ],
+          answer:2,
+          explanation:"長州藩では高杉晋作（奇兵隊結成）と木戸孝允（桂小五郎）が中心人物だった。薩摩藩は西郷隆盛・大久保利通が中心。"
+        },
+
+        // ── 並べ替え ──
+        {
+          type:"order",
+          q:"次のア〜エの出来事を、古いものから順に並べなさい。",
+          events:[
+            {text:"ペリーが浦賀に来航した", year:1853},
+            {text:"日米修好通商条約が締結された", year:1858},
+            {text:"桜田門外の変が起きた", year:1860},
+            {text:"薩英戦争が起きた", year:1863}
+          ],
+          explanation:"ペリー来航(1853)→日米修好通商条約(1858)→桜田門外の変(1860)→薩英戦争(1863)の順。"
+        },
+        {
+          type:"order",
+          q:"次のア〜エの出来事を、古いものから順に並べなさい。",
+          events:[
+            {text:"安政の大獄が行われ、吉田松陰が処刑された", year:1859},
+            {text:"四国艦隊による下関砲撃事件が起きた", year:1864},
+            {text:"薩長同盟が成立した", year:1866},
+            {text:"大政奉還が行われた", year:1867}
+          ],
+          explanation:"安政の大獄(1859)→四国艦隊下関砲撃(1864)→薩長同盟(1866)→大政奉還(1867)の順。"
+        },
+        {
+          type:"order",
+          q:"次のア〜エの出来事を、古いものから順に並べなさい。",
+          events:[
+            {text:"日米和親条約が結ばれ、日本が開国した", year:1854},
+            {text:"生麦事件が起きた", year:1862},
+            {text:"長州藩が下関海峡で外国船を砲撃した（攘夷の実行）", year:1863},
+            {text:"王政復古の大号令が出された", year:1867}
+          ],
+          explanation:"日米和親条約(1854)→生麦事件(1862)→長州藩の下関砲撃(1863)→王政復古の大号令(1867)の順。"
+        },
+
+        // ── 記述 ──
+        {
+          type:"text",
+          q:"日米修好通商条約（1858年）で開港された港を全て書きなさい。",
+          placeholder:"例：函館・長崎・…",
+          hint:"全部で5つあります",
+          required:[["神奈川","横浜"],"長崎","新潟",["兵庫","神戸"],"函館"],
+          explanation:"函館・神奈川（横浜）・長崎・新潟・兵庫の5港が開港された。"
+        },
+
+        // ── 写真4択 ──
+        {
+          type:"mc4",
+          img:"西郷隆盛.jpg",
+          q:"写真の人物は誰か。",
+          choices:["大久保利通","坂本龍馬","西郷隆盛","木戸孝允"],
+          answer:2,
+          explanation:"薩摩藩出身の西郷隆盛。倒幕運動・戊辰戦争で活躍し、明治新政府でも要職を担った。"
+        },
+        {
+          type:"mc4",
+          img:"吉田松陰.jpg",
+          q:"写真の人物は誰か。",
+          choices:["高杉晋作","吉田松陰","坂本龍馬","井伊直弼"],
+          answer:1,
+          explanation:"長州藩の吉田松陰。松下村塾で高杉晋作・木戸孝允らを育てたが、安政の大獄で処刑された。"
+        },
+        {
+          type:"mc4",
+          img:"坂本龍馬.jpg",
+          q:"写真の人物は誰か。",
+          choices:["西郷隆盛","木戸孝允","高杉晋作","坂本龍馬"],
+          answer:3,
+          explanation:"土佐藩（高知）出身の坂本龍馬。薩摩藩と長州藩を仲介して薩長同盟を成立させた。"
+        },
+        {
+          type:"mc4",
+          img:"ハリス.jpg",
+          q:"写真の人物は誰か。",
+          choices:["ペリー","リンカーン","ビスマルク","ハリス"],
+          answer:3,
+          explanation:"アメリカの初代駐日総領事のハリス。日米修好通商条約（1858年）の締結を幕府に迫った。"
+        },
+
+        // ── 地図4択 ──
+        {
+          type:"mc4",
+          img:"藩_地図.jpg",
+          q:"地図上で青色で示された地域に存在した藩はどれか。",
+          choices:["薩摩藩","長州藩","土佐藩","水戸藩"],
+          answer:1,
+          explanation:"青色の地域は現在の山口県にあたる長州藩。高杉晋作・木戸孝允らが倒幕運動を主導した。"
+        },
+
+        // ── 追加写真4択 ──
+        {
+          type:"mc4",
+          img:"木戸孝允.jpg",
+          q:"写真の人物は誰か。",
+          choices:["高杉晋作","西郷隆盛","木戸孝允","大久保利通"],
+          answer:2,
+          explanation:"長州藩の木戸孝允（桂小五郎）。薩長同盟の締結に尽力し、明治新政府の中心人物となった。"
+        },
+        {
+          type:"mc4",
+          img:"大久保利通.jpg",
+          q:"写真の人物は誰か。",
+          choices:["大久保利通","西郷隆盛","坂本龍馬","木戸孝允"],
+          answer:0,
+          explanation:"薩摩藩の大久保利通。西郷隆盛とともに倒幕運動を主導し、明治新政府でも中心的な役割を果たした。"
+        },
+        {
+          type:"mc4",
+          img:"高杉晋作.jpg",
+          q:"写真の人物は誰か。",
+          choices:["木戸孝允","吉田松陰","大久保利通","高杉晋作"],
+          answer:3,
+          explanation:"長州藩の高杉晋作。身分を問わず参加できる奇兵隊を結成し、長州藩の倒幕運動を主導した。"
+        },
+
+        // ── 追加4択 ──
+        {
+          type:"mc4",
+          q:"1867年ごろ各地で起きた「ええじゃないか」と叫んで踊り狂う騒動の直接のきっかけは何か。",
+          choices:["薩長同盟の締結","お札（おふだ）が空から降ってきたこと","外国軍が日本に上陸したこと","徳川慶喜が将軍に就任したこと"],
+          answer:1,
+          explanation:"大政奉還直前の1867年、各地でお札（おふだ）が空から降ってくるという噂をきっかけに「ええじゃないか」と叫んで踊り狂う騒動が広まった。民衆の社会不安・変革への期待を反映していた。"
+        },
+
+        // ── 追加記述 ──
+        {
+          type:"text",
+          q:"大政奉還が行われた年を西暦で答えなさい。",
+          placeholder:"西暦〇〇〇〇年",
+          required:[["1867"]],
+          explanation:"1867年10月、15代将軍・徳川慶喜が政権を朝廷に返上した（大政奉還）。これにより約260年続いた江戸幕府が滅亡した。"
+        }
+      ]
+        }
+        ,{
+          id: "sekaishi1",
+          displayOrder: 1,
+          title: "欧米の近代革命",
+          subtitle: "世界史②",
+          questions: [
+
+        // ── 4択 ──
+        {
+          type:"mc4", qn:1,
+          q:"1215年にイギリスで制定された、王の権利を制限した文書はどれか。",
+          choices:["権利の章典","マグナカルタ（大憲章）","人権宣言","独立宣言"],
+          answer:1,
+          explanation:"マグナカルタ（大憲章）は1215年に制定され、国王の権限を制限した。後のイギリス立憲政治の基礎となった。"
+        },
+        {
+          type:"mc4", qn:2,
+          q:"ロック「統治二論」で提唱された考え方として正しいものはどれか。",
+          choices:["三権分立","人民主権と直接民主制","社会契約説と抵抗権（革命権）","鉄血政策"],
+          answer:2,
+          explanation:"ロックは社会契約説と抵抗権（革命権）を提唱し、アメリカ独立宣言に大きな影響を与えた。"
+        },
+        {
+          type:"mc4", qn:3,
+          q:"名誉革命（1688年）の後、イギリスで確立した政治体制はどれか。",
+          choices:["共和政","絶対王政","立憲君主制と議会政治","社会主義"],
+          answer:2,
+          explanation:"名誉革命後に権利の章典が定められ、立憲君主制と議会政治が確立した。"
+        },
+        {
+          type:"mc4", qn:4,
+          q:"アメリカ独立宣言が発表されたのはいつか。",
+          choices:["1775年4月19日","1776年7月4日","1789年7月14日","1804年12月2日"],
+          answer:1,
+          explanation:"1776年7月4日にアメリカ独立宣言が発表された。語呂合わせ「いーな なろうよ 名無しの 国から」で覚える。"
+        },
+        {
+          type:"mc4", qn:5,
+          q:"アメリカ合衆国の初代大統領は誰か。",
+          choices:["リンカーン","フランクリン","ジェファーソン","ワシントン"],
+          answer:3,
+          explanation:"独立後に大統領制が採用され、ジョージ・ワシントンが初代大統領に就任した。"
+        },
+        {
+          type:"mc4", qn:6,
+          q:"モンテスキューが「法の精神」で提唱したのはどれか。",
+          choices:["人民主権","社会契約説","三権分立","抵抗権"],
+          answer:2,
+          explanation:"モンテスキューは「法の精神」で、立法・行政・司法の三権分立を提唱した。"
+        },
+        {
+          type:"mc4", qn:7,
+          q:"フランス革命（1789年）が起きた主な原因はどれか。",
+          choices:["ナポレオンの台頭","第三身分（市民）への重税による不満","イギリスの侵攻","アメリカ独立宣言の影響"],
+          answer:1,
+          explanation:"フランスでは聖職者・貴族が免税特権を持つ一方、平民（第三身分）が重い税を負担していた。この不平等への不満がフランス革命の主な原因となった。"
+        },
+        {
+          type:"mc4", qn:8,
+          q:"ナポレオンが1804年に制定した、後世に大きな影響を与えた法典はどれか。",
+          choices:["人権宣言","権利の章典","ナポレオン法典（民法典）","統治二論"],
+          answer:2,
+          explanation:"ナポレオンは皇帝即位後にナポレオン法典（民法）を制定し、フランス革命の精神を法律として整備した。"
+        },
+        {
+          type:"mc4", qn:9,
+          q:"アヘン戦争（1840〜1842年）後に結ばれた条約でイギリスが獲得した地はどこか。",
+          choices:["マカオ","台湾","香港","上海"],
+          answer:2,
+          explanation:"1842年の南京条約で清はイギリスに香港を割譲し、治外法権の承認・関税自主権の喪失など不平等な内容を認めた。"
+        },
+        {
+          type:"mc4", qn:10,
+          q:"南京条約（1842年）に含まれる不平等な内容として正しいものはどれか。",
+          choices:[
+            "清がイギリスに賠償金を支払い、関税自主権の喪失と治外法権を認めた",
+            "清がイギリス軍を受け入れた",
+            "イギリスが清に土地を割譲した",
+            "清が自由貿易を禁止した"
+          ],
+          answer:0,
+          explanation:"南京条約は香港割譲・賠償金・治外法権（領事裁判権）・関税自主権の喪失など不平等な内容を清に押しつけた。これは後に日本の日米修好通商条約にも影響した。"
+        },
+        {
+          type:"mc4", qn:11,
+          q:"南北戦争（1861〜1865年）中のリンカーン大統領の演説で有名な言葉はどれか。",
+          choices:[
+            "「自由・平等・博愛」",
+            "「人民の、人民による、人民のための政治」",
+            "「すべての人間は平等に作られた」",
+            "「鉄と血によって統一を成し遂げる」"
+          ],
+          answer:1,
+          explanation:"リンカーン大統領はゲティスバーグ演説で「人民の、人民による、人民のための政治」と訴えた。また、奴隷解放宣言を発表した。"
+        },
+        {
+          type:"mc4", qn:12,
+          q:"ドイツ統一（1871年）を達成したプロイセンの首相の別名はどれか。",
+          choices:["太陽王","鉄血宰相","赤いナポレオン","鋼鉄の首相"],
+          answer:1,
+          explanation:"ビスマルク首相は「鉄（兵器）と血（兵士）による統一」を主張し鉄血宰相と呼ばれた。プロイセン中心にドイツ帝国を成立させた。"
+        },
+        {
+          type:"mc4", qn:13,
+          q:"産業革命が最初に始まった国はどこか。",
+          choices:["フランス","ドイツ","アメリカ","イギリス"],
+          answer:3,
+          explanation:"1776年頃にイギリスで産業革命が始まり、蒸気機関を使った機械生産が発展した。イギリスは「世界の工場」と呼ばれるようになった。"
+        },
+        {
+          type:"mc4", qn:14,
+          q:"産業革命によって広がった社会主義を理論化した人物と著書の組み合わせとして正しいのはどれか。",
+          choices:[
+            "ルソー「社会契約論」",
+            "ロック「統治二論」",
+            "マルクス「資本論」",
+            "モンテスキュー「法の精神」"
+          ],
+          answer:2,
+          explanation:"ドイツのマルクスは「資本論」を著し、資本主義の問題点を分析した社会主義の理論を確立した。"
+        },
+
+        // ── 並べ替え ──
+        {
+          type:"order",
+          q:"次のア〜エの出来事を、古いものから順に並べなさい。",
+          events:[
+            {text:"マグナカルタ（大憲章）が制定された", year:1215},
+            {text:"ピューリタン革命が起きた", year:1640},
+            {text:"名誉革命が起きた", year:1688},
+            {text:"アメリカ独立宣言が発表された", year:1776}
+          ],
+          explanation:"マグナカルタ(1215)→ピューリタン革命(1640)→名誉革命(1688)→アメリカ独立宣言(1776)の順。"
+        },
+        {
+          type:"order",
+          q:"次のア〜エの出来事を、古いものから順に並べなさい。",
+          events:[
+            {text:"フランス革命が起きた", year:1789},
+            {text:"ナポレオンが皇帝に即位した", year:1804},
+            {text:"アヘン戦争が起きた", year:1840},
+            {text:"南北戦争が起きた", year:1861}
+          ],
+          explanation:"フランス革命(1789)→ナポレオン皇帝即位(1804)→アヘン戦争(1840)→南北戦争(1861)の順。"
+        },
+        {
+          type:"order",
+          q:"次のア〜エの出来事を、古いものから順に並べなさい。",
+          events:[
+            {text:"アヘン戦争が起きた（南京条約締結）", year:1842},
+            {text:"インド大反乱（セポイの反乱）が起きた", year:1857},
+            {text:"クリミア戦争が起きた", year:1853},
+            {text:"ドイツ帝国が成立した", year:1871}
+          ],
+          explanation:"アヘン戦争・南京条約(1842)→クリミア戦争(1853)→インド大反乱(1857)→ドイツ帝国成立(1871)の順。"
+        },
+
+        // ── 記述 ──
+        {
+          type:"mc4",
+          q:"産業革命後、工業大国となったイギリスはどのように呼ばれるようになったか。",
+          choices:["世界の中心","世界の覇者","世界の銀行","世界の工場"],
+          answer:3,
+          explanation:"イギリスは大量生産した工業製品を世界中に輸出したため「世界の工場」と呼ばれるようになった。"
+        },
+        {
+          type:"text",
+          q:"三角貿易において、清がイギリスへ輸出していたもの（2つ）と、イギリスが清への支払いに使っていたものを全て書きなさい。",
+          placeholder:"例：〇〇・〇〇・〇〇",
+          hint:"清→イギリスへ2品目、イギリス→清へ1品目",
+          required:["絹", ["茶","お茶","緑茶"], "銀"],
+          explanation:"清はイギリスへ絹・茶を輸出し、イギリスは銀で支払っていた。しかし、清はインドとの貿易で銀が流出し、結局イギリスの元に戻ってくる仕組みになっている"
+        },
+
+        // ── 写真4択 ──
+        {
+          type:"mc4",
+          img:"ビスマルク.jpg",
+          q:"写真の人物は誰か。",
+          choices:["マルクス","ナポレオン","リンカーン","ビスマルク"],
+          answer:3,
+          explanation:"プロイセンの首相ビスマルク。「鉄血宰相」と呼ばれ、軍事力によってドイツ帝国を統一した（1871年）。"
+        },
+        {
+          type:"mc4",
+          img:"マルクス.jpg",
+          q:"写真の人物は誰か。",
+          choices:["マルクス","ビスマルク","ルソー","モンテスキュー"],
+          answer:0,
+          explanation:"ドイツのマルクス。「資本論」を著し、産業革命による資本家と労働者の格差を批判して社会主義の理論を確立した。"
+        },
+
+        // ── 地図記述 ──
+        {
+          type:"text",
+          img:"南京条約_地図.jpg",
+          q:"地図上のア・イそれぞれの都市名を書きなさい。ア：南京条約でイギリスが獲得した地、イ：清が開港した主な港の一つ。",
+          placeholder:"例：ア＝〇〇　イ＝〇〇",
+          hint:"アは現在も特別行政区として知られる都市、イは貿易港の一つ",
+          required:["香港", "上海"],
+          explanation:"ア＝香港（イギリスが南京条約で割譲）、イ＝上海（南京条約で開港された5港の一つ）。"
+        }
+
+          ]
+        }
+        /* 歴史の単元はここに追加
+        ,{
+          id:"meiji1",
+          title:"明治時代①",
+          subtitle:"文明開化と近代化",
+          questions:[...]
+        }
+        */
+      ]
+    },
+    { id:"civics", title:"公民", units:[] }
+  ]
+};
+
+/* ═══════════════════════════════════════════════
+   Firebase 初期化
+═══════════════════════════════════════════════ */
+let db = null;
+try {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  db = firebase.firestore();
+} catch(e) {
+  console.warn("Firebase未設定:", e.message);
+}
+
+/* ═══════════════════════════════════════════════
+   状態
+═══════════════════════════════════════════════ */
+let studentName = "";
+let currentUnit = null;
+let questions = [];
+let qIndex = 0;
+let score = 0;
+let wrongQs = [];
+let answered = false;
+let isReviewMode = false;
+let sessionResults = [];
+let startTime = null;
+
+/* ═══════════════════════════════════════════════
+   開始画面
+═══════════════════════════════════════════════ */
+window.onload = () => {};
+
+function tryStart() {
+  const name = document.getElementById('inp-name').value.trim();
+  const code = document.getElementById('inp-code').value.trim();
+  const err = document.getElementById('start-err');
+  if (!name) { err.textContent = "お名前を入力してください。"; return; }
+  if (code !== CLASS_CODE) { err.textContent = "クラスコードが正しくありません。"; return; }
+  err.textContent = '';
+  studentName = name;
+  showScreen('s-select');
+  showCategories();
+}
+
+function showCategories() {
+  document.getElementById('cat-grid').style.display = 'grid';
+  document.getElementById('unit-section').classList.remove('active');
+  const grid = document.getElementById('cat-grid');
+  grid.innerHTML = '';
+  QUIZ_DATA.categories.forEach(cat => {
+    const hasUnits = cat.units.length > 0;
+    const d = document.createElement('div');
+    d.className = 'cat-card' + (hasUnits ? '' : ' empty');
+    d.innerHTML = `
+      <div class="cat-title">${cat.title}</div>
+      <div class="cat-count">${hasUnits ? cat.units.length + '単元' : ''}</div>
+      ${!hasUnits ? '<span class="cat-empty-tag">準備中</span>' : ''}`;
+    if (hasUnits) d.onclick = () => showUnits(cat);
+    grid.appendChild(d);
+  });
+}
+
+function showUnits(cat) {
+  document.getElementById('cat-grid').style.display = 'none';
+  document.getElementById('unit-sec-title').textContent = cat.title;
+  document.getElementById('unit-section').classList.add('active');
+  const sortedUnits = [...cat.units].sort((a,b) => (a.displayOrder||99)-(b.displayOrder||99));
+  document.getElementById('unit-cards').innerHTML = sortedUnits.map(u => `
+    <div class="unit-card" onclick="selectUnit('${cat.id}','${u.id}')">
+      <div>
+        <div class="unit-card-title">${u.title}</div>
+        <div class="unit-card-sub">${u.subtitle}</div>
+        <div class="unit-card-q">全${u.questions.length}問</div>
+      </div>
+      <div class="unit-card-arrow">›</div>
+    </div>`).join('');
+}
+
+function selectUnit(catId, unitId) {
+  const cat = QUIZ_DATA.categories.find(c => c.id === catId);
+  currentUnit = cat.units.find(u => u.id === unitId);
+  launchQuiz(false);
+}
+
+/* ═══════════════════════════════════════════════
+   クイズ開始
+═══════════════════════════════════════════════ */
+function launchQuiz(reviewMode, reviewList) {
+  isReviewMode = reviewMode;
+  if (reviewMode) {
+    questions = reviewList;
+  } else {
+    // 4択シャッフル → 記述 → 並べ替えの順
+    const mc = shuffle(currentUnit.questions.filter(q => q.type === 'mc4'));
+    const tx = currentUnit.questions.filter(q => q.type === 'text');
+    const ord = shuffle(currentUnit.questions.filter(q => q.type === 'order'));
+    questions = [...mc, ...tx, ...ord];
+  }
+  qIndex = 0;
+  score = 0;
+  wrongQs = [];
+  sessionResults = [];
+  answered = false;
+  startTime = Date.now();
+  document.getElementById('review-banner').style.display = reviewMode ? 'block' : 'none';
+  showScreen('s-quiz');
+  renderQ();
+}
+
+/* ═══════════════════════════════════════════════
+   問題描画
+═══════════════════════════════════════════════ */
+function renderQ() {
+  answered = false;
+  const q = questions[qIndex];
+  const total = questions.length;
+  document.getElementById('bar-label').textContent = `問題 ${qIndex + 1} / ${total}`;
+  document.getElementById('bar-fill').style.width = `${(qIndex / total) * 100}%`;
+  document.getElementById('score-pill').textContent = `${score} 正解`;
+  document.getElementById('next-btn').style.display = 'none';
+
+  if (q.type === 'mc4') renderMC(q);
+  else if (q.type === 'text') renderText(q);
+  else renderOrder(q);
+}
+
+/* 4択 */
+function renderMC(q) {
+  const kana = ['ア', 'イ', 'ウ', 'エ'];
+  const imgHtml = q.img ? `<div class="q-img-wrap"><img class="q-img" src="${q.img}" alt="問題画像"></div>` : '';
+  const idx = shuffle([0,1,2,3]);
+  const shuffledChoices = idx.map(i => q.choices[i]);
+  const newCorrect = idx.indexOf(q.answer);
+  document.getElementById('q-card').innerHTML = `
+    <span class="q-type mc">４択</span>
+    ${imgHtml}
+    <div class="q-text">${q.q}</div>
+    <div class="choices">
+      ${shuffledChoices.map((c, i) => `
+        <button class="ch-btn" id="ch${i}" onclick="answerMC(${i},${newCorrect})">
+          <span class="ch-lbl">${kana[i]}</span><span>${c}</span>
+        </button>`).join('')}
+    </div>
+    <div id="feedback"></div>`;
+}
+
+/* 記述 */
+function renderText(q) {
+  const imgHtml = q.img ? `<div class="q-img-wrap"><img class="q-img" src="${q.img}" alt="問題画像"></div>` : '';
+  document.getElementById('q-card').innerHTML = `
+    <span class="q-type mc" style="color:var(--green);border-color:var(--green);background:var(--green-light);">記述</span>
+    ${imgHtml}
+    <div class="q-text">${q.q}</div>
+    <div style="margin-top:14px;">
+      <input type="text" id="text-inp"
+        placeholder="${q.placeholder || '答えを入力…'}"
+        autocomplete="off"
+        style="width:100%;border:1.5px solid var(--border);padding:9px 12px;font-size:15px;
+               font-family:'Noto Sans JP',sans-serif;outline:none;transition:border .15s;">
+      ${q.hint ? `<div style="font-size:11px;color:var(--light);margin-top:4px;padding-left:4px;">ヒント：${q.hint}</div>` : ''}
+    </div>
+    <button id="text-submit" onclick="submitText()"
+      style="margin-top:10px;width:100%;background:var(--navy);color:#fff;border:none;
+             padding:11px;font-size:14px;font-family:'Noto Serif JP',serif;font-weight:700;
+             cursor:pointer;letter-spacing:.08em;">
+      答えを確認する
+    </button>
+    <div id="feedback"></div>`;
+  document.getElementById('text-inp').addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitText();
+  });
+}
+
+function submitText() {
+  if (answered) return;
+  const q = questions[qIndex];
+  const val = document.getElementById('text-inp').value.trim();
+  if (!val) return;
+  answered = true;
+  const inp = document.getElementById('text-inp');
+  inp.disabled = true;
+  document.getElementById('text-submit').disabled = true;
+
+  let ok, correctAns, expExtra = '';
+  if (q.required) {
+    // 複数答え：各港名が含まれているか確認
+    const missing = q.required.filter(r => {
+      const opts = Array.isArray(r) ? r : [r];
+      return !opts.some(opt => val.includes(opt));
+    });
+    ok = missing.length === 0;
+    correctAns = q.required.map(r => Array.isArray(r) ? r[0] : r).join('・');
+    if (missing.length > 0) {
+      expExtra = `（書けていない港：${missing.map(r => Array.isArray(r) ? r[0] : r).join('・')}）`;
+    }
+  } else {
+    ok = val.replace(/\s/g,'') === String(q.answer).replace(/\s/g,'');
+    correctAns = q.answer;
+  }
+  inp.style.borderColor = ok ? 'var(--green)' : 'var(--red)';
+  inp.style.background  = ok ? 'var(--green-light)' : 'var(--red-light)';
+  recordResult(q, ok, val);
+  showFeedback(ok, correctAns, q.explanation + expExtra);
+}
+
+function answerMC(sel, correct) {
+  if (answered) return;
+  answered = true;
+  const q = questions[qIndex];
+  const ok = sel === correct;
+  ['ch0','ch1','ch2','ch3'].forEach((id, i) => {
+    const b = document.getElementById(id);
+    b.disabled = true;
+    if (i === correct) b.classList.add('correct');
+    else if (i === sel && !ok) b.classList.add('wrong');
+    else b.classList.add('dim');
+  });
+  recordResult(q, ok, ok ? q.choices[sel] : q.choices[sel]);
+  showFeedback(ok, q.choices[correct], q.explanation);
+}
+
+/* 並べ替え */
+const kanaLabels = ['ア','イ','ウ','エ'];
+let ordEvents = [];
+let ordSelected = [];
+
+function renderOrder(q) {
+  // イベントをシャッフルしてラベル付与
+  ordEvents = shuffle(q.events.map((e, i) => ({...e, origIdx: i})));
+  ordSelected = [];
+  const evtHtml = ordEvents.map((e, i) => `
+    <div class="ord-evt" id="ord${i}" onclick="selectOrdEvt(${i})">
+      <span class="ord-kana">${kanaLabels[i]}</span>
+      <span>${e.text}</span>
+      <span class="ord-num" id="ord-num${i}"></span>
+    </div>`).join('');
+
+  document.getElementById('q-card').innerHTML = `
+    <span class="q-type ord">並べ替え</span>
+    <div class="q-text">${q.q}</div>
+    <div class="ord-instruct">
+      選択した順番に数字（①②③④）が付きます。<br>
+      「やり直す」で最初から選び直せます。
+    </div>
+    <div class="ord-events">${evtHtml}</div>
+    <div class="ord-actions">
+      <button class="ord-reset" onclick="resetOrd()">やり直す</button>
+      <button class="ord-submit" id="ord-submit" onclick="submitOrd()">答えを確認する</button>
+    </div>
+    <div id="feedback"></div>`;
+}
+
+function selectOrdEvt(i) {
+  if (answered) return;
+  if (ordSelected.includes(i)) return;
+  ordSelected.push(i);
+  const nums = ['①','②','③','④'];
+  document.getElementById(`ord-num${i}`).textContent = nums[ordSelected.length - 1];
+  document.getElementById(`ord${i}`).classList.add('selected');
+  if (ordSelected.length === 4) {
+    document.getElementById('ord-submit').style.display = 'block';
+  }
+}
+
+function resetOrd() {
+  if (answered) return;
+  ordSelected = [];
+  for (let i = 0; i < 4; i++) {
+    document.getElementById(`ord${i}`).classList.remove('selected');
+    document.getElementById(`ord-num${i}`).textContent = '';
+  }
+  document.getElementById('ord-submit').style.display = 'none';
+}
+
+function submitOrd() {
+  if (answered || ordSelected.length < 4) return;
+  answered = true;
+  const q = questions[qIndex];
+  // 正解順（年号昇順）
+  const correctOrder = [...ordEvents].map((_, i) => i).sort(
+    (a, b) => ordEvents[a].year - ordEvents[b].year
+  );
+  const ok = ordSelected.join(',') === correctOrder.join(',');
+
+  // 色付け
+  ordEvents.forEach((_, i) => {
+    const el = document.getElementById(`ord${i}`);
+    el.classList.add('disabled');
+    const myRank = ordSelected.indexOf(i);
+    const correctRank = correctOrder.indexOf(i);
+    if (myRank === correctRank) el.classList.add('correct');
+    else el.classList.add('wrong-place');
+  });
+  document.querySelectorAll('.ord-reset, .ord-submit').forEach(b => b.disabled = true);
+
+  // 正解順のテキスト生成
+  const correctText = correctOrder.map(i => `${kanaLabels[i]}（${ordEvents[i].year}年）`).join(' → ');
+  recordResult(q, ok, '');
+  showFeedback(ok, `正しい順：${correctText}`, q.explanation);
+}
+
+/* ═══════════════════════════════════════════════
+   フィードバック / 記録
+═══════════════════════════════════════════════ */
+function showFeedback(ok, correctAns, exp) {
+  if (ok) score++;
+  document.getElementById('score-pill').textContent = `${score} 正解`;
+  const fb = document.getElementById('feedback');
+  fb.className = `feedback ${ok ? 'correct' : 'wrong'}`;
+  fb.innerHTML = `
+    <div class="feedback-head">${ok ? '◎　正解' : '✕　不正解'}</div>
+    ${!ok ? `<div class="feedback-ans">正解：${correctAns}</div>` : ''}
+    <div class="feedback-exp">${exp}</div>`;
+  document.getElementById('next-btn').style.display = 'block';
+}
+
+function recordResult(q, ok, yourAns) {
+  sessionResults.push({ q: q.q, ok, yourAns, correct: q.answer !== undefined ? q.choices?.[q.answer] : '（順番）' });
+  if (!ok) wrongQs.push(q);
+}
+
+/* ═══════════════════════════════════════════════
+   次の問題 / 終了
+═══════════════════════════════════════════════ */
+function nextQ() {
+  qIndex++;
+  if (qIndex < questions.length) renderQ();
+  else endQuiz();
+}
+
+function endQuiz() {
+  showScreen('s-result');
+  buildResult();
+  saveToFirebase();
+}
+
+/* ═══════════════════════════════════════════════
+   結果画面
+═══════════════════════════════════════════════ */
+function buildResult() {
+  const total = questions.length;
+  const pct = Math.round((score / total) * 100);
+  let cls, mark, msg;
+  if (pct >= 90)       { cls='great'; mark='優'; msg='素晴らしい成績です！'; }
+  else if (pct >= 70)  { cls='good';  mark='良'; msg='よく頑張りました！'; }
+  else                 { cls='try';   mark='可'; msg='もう一度教材を見直しましょう。'; }
+
+  document.getElementById('result-card').innerHTML = `
+    <div class="result-stamp ${cls}">${mark}</div>
+    <div class="result-score">${score}<span> / ${total}</span></div>
+    <div class="result-pct">正答率 ${pct}%</div>
+    <div class="result-msg">${msg}</div>`;
+
+  // 間違えた問題タブ
+  const wTab = document.getElementById('tab-wrong');
+  if (wrongQs.length === 0) {
+    wTab.innerHTML = '<div class="no-wrong">間違えた問題はありません！</div>';
+    document.getElementById('review-btn').disabled = true;
+  } else {
+    wTab.innerHTML = `<div class="wrong-list">
+      ${sessionResults.filter(r => !r.ok).map(r => `
+        <div class="wrong-item">
+          <div class="wrong-q">${r.q}</div>
+          <div class="wrong-a">正解：${r.correct || '（順番）'}</div>
+        </div>`).join('')}
+    </div>`;
+    document.getElementById('review-btn').disabled = false;
+  }
+
+  // 全問一覧タブ
+  document.getElementById('tab-all').innerHTML = `<div class="wrong-list">
+    ${sessionResults.map(r => `
+      <div class="wrong-item" style="${r.ok ? 'border-color:var(--green);background:var(--green-light);' : ''}">
+        <div class="wrong-q">${r.ok ? '◎' : '✕'}　${r.q}</div>
+        ${!r.ok ? `<div class="wrong-a">正解：${r.correct || '（順番）'}</div>` : ''}
+      </div>`).join('')}
+  </div>`;
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.rtab').forEach((t, i) => {
+    const names = ['wrong','all'];
+    t.classList.toggle('active', names[i] === tab);
+  });
+  document.querySelectorAll('.rtab-content').forEach((c, i) => {
+    const names = ['tab-wrong','tab-all'];
+    c.classList.toggle('active', names[i] === `tab-${tab}`);
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   Firebase 保存
+═══════════════════════════════════════════════ */
+async function saveToFirebase() {
+  if (!db) { document.getElementById('saving-msg').textContent = '（Firebase未設定のため履歴は保存されません）'; return; }
+  document.getElementById('saving-msg').textContent = '結果を保存中…';
+  const elapsed = Math.round((Date.now() - startTime) / 1000);
+  try {
+    await db.collection('results').add({
+      name: studentName,
+      unit: currentUnit.id,
+      unitTitle: currentUnit.title,
+      score,
+      total: questions.length,
+      wrongCount: wrongQs.length,
+      timeSeconds: elapsed,
+      mode: isReviewMode ? 'review' : 'normal',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    document.getElementById('saving-msg').textContent = '結果を保存しました。';
+  } catch(e) {
+    document.getElementById('saving-msg').textContent = '保存に失敗しました。';
+    console.error(e);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   ナビゲーション
+═══════════════════════════════════════════════ */
+function startReview() {
+  if (wrongQs.length === 0) return;
+  launchQuiz(true, [...wrongQs]);
+}
+
+function restartSame() {
+  launchQuiz(false);
+}
+
+function goStart() {
+  showScreen('s-select');
+  showCategories();
+}
+
+function confirmBack() {
+  if (confirm('テストを終了して最初に戻りますか？（記録は保存されません）')) goStart();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function shuffle(arr) {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
+</script>
+</body>
+</html>
+}
 .ord-num{margin-left:auto;width:24px;height:24px;border:1.5px solid transparent;
   display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;
   flex-shrink:0;transition:all .15s;}
