@@ -204,6 +204,29 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--ink);min-height:100vh;bac
 .review-banner{background:var(--red);color:#fff;text-align:center;padding:8px;font-size:13px;
   font-family:'Noto Serif JP',serif;font-weight:700;letter-spacing:.08em;margin-bottom:16px;}
 
+/* ════════ 復習リスト画面 ════════ */
+.review-list-wrap{max-width:580px;margin:0 auto;}
+.review-count-info{text-align:center;font-size:14px;color:var(--light);margin-bottom:16px;}
+.review-launch-btn{width:100%;background:var(--red);color:#fff;border:none;padding:13px;
+  font-size:15px;font-family:'Noto Serif JP',serif;font-weight:700;cursor:pointer;
+  letter-spacing:.08em;margin-bottom:20px;transition:background .15s;}
+.review-launch-btn:hover{background:#6a1010;}
+.review-launch-btn:disabled{background:#ccc;cursor:default;}
+.bank-list{display:flex;flex-direction:column;gap:10px;}
+.bank-item{background:var(--card);border:1.5px solid var(--border);padding:14px 16px;}
+.bank-item-unit{font-size:10px;color:var(--light);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;}
+.bank-item-q{font-family:'Noto Serif JP',serif;font-size:14px;line-height:1.7;margin-bottom:10px;}
+.understood-btn{background:none;border:1.5px solid var(--green);color:var(--green);
+  padding:6px 14px;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;transition:all .15s;}
+.understood-btn:hover{background:var(--green);color:#fff;}
+.review-empty{text-align:center;padding:40px 20px;color:var(--light);font-size:15px;line-height:2;}
+.review-list-btn{width:100%;background:var(--red-light);color:var(--red);border:1.5px solid var(--red);
+  padding:11px;font-size:14px;font-family:'Noto Serif JP',serif;font-weight:700;cursor:pointer;
+  letter-spacing:.08em;margin-bottom:12px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.review-list-btn:hover{background:var(--red);color:#fff;}
+.review-badge{background:var(--red);color:#fff;border-radius:10px;padding:1px 8px;
+  font-size:11px;font-weight:700;font-family:'Noto Sans JP',sans-serif;}
+
 /* ════════ ローディング ════════ */
 .saving{text-align:center;font-size:13px;color:var(--light);padding:8px;margin-top:8px;}
 </style>
@@ -234,6 +257,9 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--ink);min-height:100vh;bac
     <div class="page-head">
       <h1>単元を選ぶ</h1>
     </div>
+    <button class="review-list-btn" id="review-list-btn" onclick="showReviewList()">
+      復習リスト <span class="review-badge" id="review-badge">0</span>
+    </button>
     <div class="cat-grid" id="cat-grid"></div>
     <div class="unit-section" id="unit-section">
       <div class="unit-sec-head">
@@ -276,9 +302,19 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--ink);min-height:100vh;bac
     <div class="saving" id="saving-msg"></div>
     <div class="result-actions">
       <button class="res-btn review" id="review-btn" onclick="startReview()">間違えた問題だけ復習する</button>
-      <button class="res-btn primary" onclick="restartSame()">同じ単元をもう一度</button>
+      <button class="res-btn primary" id="restart-btn" onclick="restartSame()">同じ単元をもう一度</button>
       <button class="res-btn back" onclick="goStart()">単元選択に戻る</button>
     </div>
+  </div>
+</div>
+
+<!-- ══ 復習リスト ══ -->
+<div class="screen" id="s-review-list">
+  <div class="review-list-wrap">
+    <div class="page-head">
+      <h1>復習リスト</h1>
+    </div>
+    <div id="review-list-content"></div>
   </div>
 </div>
 
@@ -290,7 +326,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--ink);min-height:100vh;bac
 /* ═══════════════════════════════════════════════
    ★ 設定　← ここを変更してください
 ═══════════════════════════════════════════════ */
-const CLASS_CODE = "2025YAMA"; // 生徒に伝えるクラスコード（自由に変更可）
+const CLASS_CODE = "2026YANA";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBgxeXCoCC3TG001PV5bvU1bDwNPZQYiiQ",
@@ -1097,7 +1133,75 @@ function showFeedback(ok, correctAns, exp) {
 
 function recordResult(q, ok, yourAns) {
   sessionResults.push({ q: q.q, ok, yourAns, correct: q.answer !== undefined ? q.choices?.[q.answer] : '（順番）' });
-  if (!ok) wrongQs.push(q);
+  if (!ok) {
+    wrongQs.push(q);
+    addToWrongBank(q);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   localStorage 復習バンク
+═══════════════════════════════════════════════ */
+function getWrongBank() {
+  return JSON.parse(localStorage.getItem('shakai_wrong_bank') || '[]');
+}
+function saveWrongBank(bank) {
+  localStorage.setItem('shakai_wrong_bank', JSON.stringify(bank));
+}
+function addToWrongBank(q) {
+  const bank = getWrongBank();
+  if (!bank.find(item => item.q === q.q)) {
+    bank.push({ ...q, _unitTitle: currentUnit.title, _unitId: currentUnit.id });
+    saveWrongBank(bank);
+  }
+  updateReviewBadge();
+}
+function removeFromWrongBank(qText) {
+  saveWrongBank(getWrongBank().filter(item => item.q !== qText));
+  updateReviewBadge();
+}
+function updateReviewBadge() {
+  const count = getWrongBank().length;
+  const badge = document.getElementById('review-badge');
+  if (badge) badge.textContent = count;
+}
+
+function showReviewList() {
+  const bank = getWrongBank();
+  const content = document.getElementById('review-list-content');
+  if (bank.length === 0) {
+    content.innerHTML = `
+      <div class="review-empty">復習リストは空です。<br>問題を解いて間違えた問題が<br>自動で追加されます。</div>
+      <button class="res-btn back" style="width:100%;margin-top:20px;" onclick="showScreen('s-select');showCategories();">← 単元選択に戻る</button>`;
+  } else {
+    content.innerHTML = `
+      <div class="review-count-info">${bank.length}問の間違えた問題があります</div>
+      <button class="review-launch-btn" onclick="launchBankQuiz()">まとめて復習する（${bank.length}問）</button>
+      <div class="bank-list" id="bank-list"></div>
+      <button class="res-btn back" style="width:100%;margin-top:20px;" onclick="showScreen('s-select');showCategories();">← 単元選択に戻る</button>`;
+    const bankList = document.getElementById('bank-list');
+    bank.forEach(q => {
+      const item = document.createElement('div');
+      item.className = 'bank-item';
+      item.innerHTML = `
+        <div class="bank-item-unit">${q._unitTitle || ''}</div>
+        <div class="bank-item-q">${q.q}</div>
+        <button class="understood-btn">理解した ✓</button>`;
+      item.querySelector('.understood-btn').addEventListener('click', () => {
+        removeFromWrongBank(q.q);
+        showReviewList();
+      });
+      bankList.appendChild(item);
+    });
+  }
+  showScreen('s-review-list');
+}
+
+function launchBankQuiz() {
+  const bank = getWrongBank();
+  if (bank.length === 0) return;
+  currentUnit = { id: 'review-bank', title: '復習リスト', questions: bank };
+  launchQuiz(true, shuffle(bank));
 }
 
 /* ═══════════════════════════════════════════════
@@ -1156,6 +1260,16 @@ function buildResult() {
         ${!r.ok ? `<div class="wrong-a">正解：${r.correct || '（順番）'}</div>` : ''}
       </div>`).join('')}
   </div>`;
+
+  // 復習バンクモードのときボタン文言を変更
+  const restartBtn = document.getElementById('restart-btn');
+  if (currentUnit.id === 'review-bank') {
+    restartBtn.textContent = '復習リストをもう一度';
+    restartBtn.onclick = showReviewList;
+  } else {
+    restartBtn.textContent = '同じ単元をもう一度';
+    restartBtn.onclick = restartSame;
+  }
 }
 
 function switchTab(tab) {
@@ -1225,6 +1339,9 @@ function showScreen(id) {
 function shuffle(arr) {
   return [...arr].sort(() => Math.random() - 0.5);
 }
+
+// バッジ初期化
+document.addEventListener('DOMContentLoaded', updateReviewBadge);
 </script>
 </body>
 </html>
