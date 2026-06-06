@@ -229,6 +229,74 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--ink);min-height:100vh;bac
 
 /* ════════ ローディング ════════ */
 .saving{text-align:center;font-size:13px;color:var(--light);padding:8px;margin-top:8px;}
+
+/* ════════ 宿題・授業内容ボタン ════════ */
+.info-row{display:flex;gap:10px;margin-bottom:12px;}
+.info-btn{flex:1;background:var(--card);border:1.5px solid var(--border);padding:11px;
+  font-size:13px;font-family:'Noto Serif JP',serif;font-weight:700;cursor:pointer;
+  color:var(--navy);transition:all .15s;letter-spacing:.04em;}
+.info-btn:hover{border-color:var(--navy);background:var(--navy-light);}
+.info-btn.hw-btn{border-color:var(--red);color:var(--red);}
+.info-btn.hw-btn:hover{background:var(--red-light);}
+
+/* ════════ 宿題画面 ════════ */
+.hw-wrap{max-width:580px;margin:0 auto;}
+.hw-card{background:var(--red-light);border:1.5px solid var(--red);padding:20px 22px;margin-bottom:12px;}
+.hw-deadline{font-size:13px;color:var(--red);font-weight:700;margin-bottom:12px;letter-spacing:.04em;}
+.hw-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;
+  border-bottom:1px solid #e8c8c8;font-size:14px;font-family:'Noto Serif JP',serif;line-height:1.6;}
+.hw-item:last-child{border-bottom:none;}
+.hw-check{color:var(--red);flex-shrink:0;}
+.hw-note{font-size:12px;color:var(--light);margin-top:10px;padding-top:10px;border-top:1px solid #e8c8c8;}
+
+/* ════════ 授業内容画面 ════════ */
+.lessons-wrap{max-width:580px;margin:0 auto;}
+.lesson-item{background:var(--card);border:1.5px solid var(--border);padding:14px 16px;margin-bottom:8px;
+  display:flex;align-items:flex-start;gap:14px;}
+.lesson-num-badge{flex-shrink:0;width:36px;height:36px;background:var(--navy);color:#fff;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:'Noto Serif JP',serif;font-weight:700;font-size:13px;}
+.lesson-body{flex:1;}
+.lesson-date{font-size:11px;color:var(--light);margin-bottom:3px;}
+.lesson-title{font-weight:700;font-size:14px;color:var(--navy);font-family:'Noto Serif JP',serif;margin-bottom:4px;}
+.lesson-content{font-size:12px;color:var(--mid);line-height:1.65;}
+
+/* ════════ 宿題科目見出し ════════ */
+.hw-subj-head{font-family:'Noto Serif JP',serif;font-size:13px;font-weight:700;
+  color:var(--navy);background:var(--navy-light);border:1px solid #b8c8df;
+  padding:7px 12px;margin-bottom:8px;}
+.hw-empty{font-size:13px;color:var(--light);padding:8px 4px 14px;}
+
+/* ════════ 添付ファイル（授業内容）════════ */
+.lesson-attach{margin-top:8px;display:flex;flex-direction:column;gap:8px;}
+.attach-img-thumb{max-width:100%;max-height:220px;object-fit:contain;
+  border:1px solid var(--border);display:block;}
+.attach-html-btn{background:var(--navy-light);border:1px solid var(--navy);color:var(--navy);
+  padding:7px 14px;font-size:12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;
+  display:inline-flex;align-items:center;gap:5px;transition:all .15s;align-self:flex-start;}
+.attach-html-btn:hover{background:var(--navy);color:#fff;}
+
+/* ════════ 授業内容 科目タブ ════════ */
+.lesson-subj-tabs{display:flex;margin-bottom:16px;border:1.5px solid var(--border);}
+.lesson-stab{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:700;
+  font-family:'Noto Serif JP',serif;background:var(--card);color:var(--light);
+  border:none;cursor:pointer;border-right:1px solid var(--border);transition:all .15s;}
+.lesson-stab:last-child{border-right:none;}
+.lesson-stab.active{background:var(--navy);color:#fff;}
+
+/* ════════ HTMLモーダル ════════ */
+.html-modal{display:none;position:fixed;inset:0;background:#0008;z-index:999;
+  align-items:center;justify-content:center;}
+.html-modal.open{display:flex;}
+.html-modal-inner{background:#fff;width:93vw;max-width:860px;height:87vh;
+  display:flex;flex-direction:column;box-shadow:0 8px 32px #0005;}
+.html-modal-bar{background:var(--navy);color:#fff;padding:10px 16px;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.html-modal-bar-title{font-size:13px;font-weight:700;font-family:'Noto Serif JP',serif;}
+.html-modal-close{background:none;border:1px solid #ffffff88;color:#fff;
+  padding:4px 12px;cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;}
+.html-modal-close:hover{background:#ffffff22;}
+.html-modal-frame{flex:1;width:100%;border:none;}
 </style>
 </head>
 <body>
@@ -256,6 +324,10 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--ink);min-height:100vh;bac
   <div class="select-wrap">
     <div class="page-head">
       <h1>単元を選ぶ</h1>
+    </div>
+    <div class="info-row">
+      <button class="info-btn hw-btn" onclick="showHomework()">📋 今週の宿題</button>
+      <button class="info-btn" onclick="showLessons()">📚 授業内容</button>
     </div>
     <button class="review-list-btn" id="review-list-btn" onclick="showReviewList()">
       復習リスト <span class="review-badge" id="review-badge">0</span>
@@ -315,6 +387,45 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--ink);min-height:100vh;bac
       <h1>復習リスト</h1>
     </div>
     <div id="review-list-content"></div>
+  </div>
+</div>
+
+<!-- ══ 今週の宿題 ══ -->
+<div class="screen" id="s-homework">
+  <div class="hw-wrap">
+    <div class="page-head">
+      <h1>今週の宿題</h1>
+    </div>
+    <div id="hw-content"><div class="saving">読み込み中…</div></div>
+    <button class="res-btn back" style="width:100%;margin-top:8px;"
+      onclick="showScreen('s-select');showCategories();">← 戻る</button>
+  </div>
+</div>
+
+<!-- ══ 授業内容 ══ -->
+<div class="screen" id="s-lessons">
+  <div class="lessons-wrap">
+    <div class="page-head">
+      <h1>授業内容</h1>
+    </div>
+    <div class="lesson-subj-tabs">
+      <button class="lesson-stab active" id="ls-quiz-stab-kokugo" onclick="switchLessonTab('kokugo')">📖 国語</button>
+      <button class="lesson-stab" id="ls-quiz-stab-shakai" onclick="switchLessonTab('shakai')">📚 社会</button>
+    </div>
+    <div id="lessons-content"><div class="saving">読み込み中…</div></div>
+    <button class="res-btn back" style="width:100%;margin-top:8px;"
+      onclick="showScreen('s-select');showCategories();">← 戻る</button>
+  </div>
+</div>
+
+<!-- ══ HTMLプリントモーダル ══ -->
+<div class="html-modal" id="html-modal" onclick="if(event.target===this)closeHtmlModal()">
+  <div class="html-modal-inner">
+    <div class="html-modal-bar">
+      <span class="html-modal-bar-title" id="html-modal-title">プリント</span>
+      <button class="html-modal-close" onclick="closeHtmlModal()">✕ 閉じる</button>
+    </div>
+    <iframe class="html-modal-frame" id="html-modal-frame" sandbox="allow-same-origin allow-scripts"></iframe>
   </div>
 </div>
 
@@ -1529,6 +1640,135 @@ function showScreen(id) {
 
 function shuffle(arr) {
   return [...arr].sort(() => Math.random() - 0.5);
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ═══════════════════════════════════════════════
+   今週の宿題（社会 / 国語）
+═══════════════════════════════════════════════ */
+async function showHomework() {
+  showScreen('s-homework');
+  const content = document.getElementById('hw-content');
+  content.innerHTML = '<div class="saving">読み込み中…</div>';
+  if (!db) { content.innerHTML = '<div class="saving">データを取得できません。</div>'; return; }
+  try {
+    const [shakaiSnap, kokugoSnap] = await Promise.all([
+      db.collection('homework').doc('shakai').get(),
+      db.collection('homework').doc('kokugo').get()
+    ]);
+
+    function buildSubj(snap, label, color) {
+      let html = `<div class="hw-subj-head">${label}</div>`;
+      if (snap.exists && snap.data()?.items?.length) {
+        const hw = snap.data();
+        let cardStyle = '', dlStyle = '', divStyle = '', chkStyle = '';
+        if (color === 'green') {
+          cardStyle = 'border-color:var(--green);background:var(--green-light);';
+          dlStyle   = 'color:var(--green);';
+          divStyle  = 'border-bottom-color:#c8e8c8;';
+          chkStyle  = 'color:var(--green);';
+        } else if (color === 'orange') {
+          cardStyle = 'border-color:#c85a00;background:#fff3e0;';
+          dlStyle   = 'color:#c85a00;';
+          divStyle  = 'border-bottom-color:#f5d5b0;';
+          chkStyle  = 'color:#c85a00;';
+        }
+        html += `<div class="hw-card" style="${cardStyle}">`;
+        if (hw.deadline) html += `<div class="hw-deadline" style="${dlStyle}">📅 提出期限：${escHtml(hw.deadline)}</div>`;
+        html += hw.items.map(item =>
+          `<div class="hw-item" style="${divStyle}"><span class="hw-check" style="${chkStyle}">□</span><span>${escHtml(item)}</span></div>`
+        ).join('');
+        html += `</div>`;
+      } else {
+        html += `<div class="hw-empty">現在、宿題は登録されていません。</div>`;
+      }
+      return html;
+    }
+
+    content.innerHTML =
+      buildSubj(kokugoSnap, '📖 国語', 'green') +
+      '<div style="height:12px;"></div>' +
+      buildSubj(shakaiSnap, '📚 社会', 'orange');
+  } catch(e) {
+    content.innerHTML = '<div class="saving">読み込みに失敗しました。</div>';
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   授業内容（添付ファイル対応）
+═══════════════════════════════════════════════ */
+let lessonsData = [];
+let currentLessonTab = 'kokugo';
+
+async function showLessons() {
+  showScreen('s-lessons');
+  const content = document.getElementById('lessons-content');
+  content.innerHTML = '<div class="saving">読み込み中…</div>';
+  if (!db) { content.innerHTML = '<div class="saving">データを取得できません。</div>'; return; }
+  try {
+    const snap = await db.collection('lessons').orderBy('number', 'asc').get();
+    lessonsData = snap.docs.map(d => d.data());
+    renderLessonsContent();
+  } catch(e) {
+    content.innerHTML = '<div class="saving">読み込みに失敗しました。</div>';
+  }
+}
+
+function switchLessonTab(subj) {
+  currentLessonTab = subj;
+  ['shakai','kokugo'].forEach(s =>
+    document.getElementById('ls-quiz-stab-' + s).classList.toggle('active', s === subj)
+  );
+  renderLessonsContent();
+}
+
+function renderLessonsContent() {
+  const content = document.getElementById('lessons-content');
+  const filtered = lessonsData.filter(l => (l.subject || 'shakai') === currentLessonTab);
+  if (filtered.length === 0) {
+    content.innerHTML = '<div class="review-empty" style="padding:30px 0;">この科目の授業内容はまだ登録されていません。</div>';
+    return;
+  }
+  content.innerHTML = filtered.map(l => {
+    const origIdx = lessonsData.indexOf(l);
+    let attachHtml = '';
+    if (l.attachments?.length) {
+      attachHtml = '<div class="lesson-attach">';
+      l.attachments.forEach((att, ai) => {
+        if (att.type === 'image') {
+          attachHtml += `<img class="attach-img-thumb" src="${att.data}" alt="${escHtml(att.name)}">`;
+        } else if (att.type === 'html') {
+          attachHtml += `<button class="attach-html-btn" onclick="openHtmlModal(${origIdx},${ai})">📄 ${escHtml(att.name)}</button>`;
+        }
+      });
+      attachHtml += '</div>';
+    }
+    return `
+      <div class="lesson-item">
+        <div class="lesson-num-badge">${l.number}</div>
+        <div class="lesson-body">
+          <div class="lesson-date">${escHtml(l.date || '')}</div>
+          <div class="lesson-title">${escHtml(l.title || '')}</div>
+          ${l.content ? `<div class="lesson-content">${escHtml(l.content)}</div>` : ''}
+          ${attachHtml}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function openHtmlModal(lessonIdx, attachIdx) {
+  const att = lessonsData[lessonIdx].attachments[attachIdx];
+  document.getElementById('html-modal-title').textContent = att.name;
+  document.getElementById('html-modal-frame').srcdoc = att.data;
+  document.getElementById('html-modal').classList.add('open');
+}
+
+function closeHtmlModal() {
+  document.getElementById('html-modal').classList.remove('open');
+  document.getElementById('html-modal-frame').srcdoc = '';
 }
 
 // バッジ初期化
