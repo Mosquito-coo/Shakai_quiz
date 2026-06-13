@@ -1203,7 +1203,7 @@ const QUIZ_DATA = {
            q:"大日本帝国憲法が発布された年月日を答えなさい。",
            placeholder:"〇〇〇〇年〇月〇〇日",
            required:[["1889"],["2月11日"]],
-           explanation:"大日本帝国憲法は1889年2月11日（紀元節）に発布された。アジアの中でいち早く創ろう（大日本帝国憲法）で覚える"},
+           explanation:"大日本帝国憲法は1889年2月11日（紀元節）に発布された。”いち早くつくろう大日本帝国憲法”で覚える"},
           {type:"text",
            q:"秩父事件が起きた年を西暦で答えなさい。",
            placeholder:"西暦〇〇〇〇年",
@@ -1452,7 +1452,7 @@ function submitText() {
     ok = missing.length === 0;
     correctAns = q.required.map(r => Array.isArray(r) ? r[0] : r).join('・');
     if (missing.length > 0) {
-      expExtra = `（書けていない港：${missing.map(r => Array.isArray(r) ? r[0] : r).join('・')}）`;
+      expExtra = `（書けていない箇所：${missing.map(r => Array.isArray(r) ? r[0] : r).join('・')}）`;
     }
   } else {
     ok = val.replace(/\s/g,'') === String(q.answer).replace(/\s/g,'');
