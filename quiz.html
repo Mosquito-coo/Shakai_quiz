@@ -438,6 +438,7 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--ink);min-height:100vh;bac
    ★ 設定　← ここを変更してください
 ═══════════════════════════════════════════════ */
 const CLASS_CODE = "2026YANA";
+const IMG_BASE = "クイズ画像/";   // クイズ用画像はこのフォルダにまとめて置く
 
 const firebaseConfig = {
   apiKey: "AIzaSyBgxeXCoCC3TG001PV5bvU1bDwNPZQYiiQ",
@@ -1846,7 +1847,7 @@ function renderQ() {
 function renderMC(q) {
   const kana = ['ア', 'イ', 'ウ', 'エ'];
   const imgHtml = q.img
-    ? `<div class="q-img-wrap"><img class="q-img" src="${q.img}" alt="問題画像"></div>`
+    ? `<div class="q-img-wrap"><img class="q-img" src="${IMG_BASE}${q.img}" alt="問題画像"></div>`
     : q.svgMap
     ? `<div class="q-img-wrap" style="overflow:hidden;">${makeSvgMap(q.svgMap)}</div>`
     : '';
@@ -1869,7 +1870,7 @@ function renderMC(q) {
 /* 記述 */
 function renderText(q) {
   const imgHtml = q.img
-    ? `<div class="q-img-wrap"><img class="q-img" src="${q.img}" alt="問題画像"></div>`
+    ? `<div class="q-img-wrap"><img class="q-img" src="${IMG_BASE}${q.img}" alt="問題画像"></div>`
     : q.svgMap
     ? `<div class="q-img-wrap" style="overflow:hidden;">${makeSvgMap(q.svgMap)}</div>`
     : '';
