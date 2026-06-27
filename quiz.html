@@ -267,6 +267,29 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--ink);min-height:100vh;bac
   padding:7px 12px;margin-bottom:8px;}
 .hw-empty{font-size:13px;color:var(--light);padding:8px 4px 14px;}
 
+/* ════════ お知らせ ════════ */
+.info-btn.notice-btn{position:relative;}
+.notice-dot{position:absolute;top:6px;right:8px;width:9px;height:9px;border-radius:50%;
+  background:var(--red);box-shadow:0 0 0 2px var(--card);}
+.notice-banner{display:flex;align-items:center;gap:10px;cursor:pointer;
+  background:var(--card);border:1.5px solid var(--border);border-left:5px solid var(--navy);
+  padding:11px 14px;margin-bottom:12px;}
+.notice-banner:hover{background:var(--navy-light);}
+.notice-banner .nb-icon{font-size:18px;flex-shrink:0;}
+.notice-banner .nb-text{flex:1;min-width:0;}
+.notice-banner .nb-title{font-weight:700;color:var(--navy);font-size:13px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.notice-banner .nb-sub{font-size:11px;color:var(--light);margin-top:1px;}
+.notice-banner .nb-arrow{color:var(--navy);font-weight:700;flex-shrink:0;}
+.notice-wrap{max-width:580px;margin:0 auto;}
+.notice-card{background:var(--card);border:1.5px solid var(--border);border-top:4px solid var(--navy);
+  padding:22px 24px;margin-bottom:12px;}
+.notice-card-title{font-family:'Noto Serif JP',serif;font-size:19px;font-weight:700;
+  color:var(--navy);margin-bottom:6px;}
+.notice-card-date{font-size:12px;color:var(--light);margin-bottom:14px;}
+.notice-card-body{font-size:15px;line-height:1.9;color:var(--ink);white-space:pre-wrap;}
+.notice-empty{font-size:14px;color:var(--light);text-align:center;padding:40px 0;}
+
 /* ════════ 添付ファイル（授業内容）════════ */
 .lesson-attach{margin-top:8px;display:flex;flex-direction:column;gap:8px;}
 .attach-img-thumb{max-width:100%;max-height:220px;object-fit:contain;
@@ -325,9 +348,18 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--ink);min-height:100vh;bac
     <div class="page-head">
       <h1>単元を選ぶ</h1>
     </div>
+    <div class="notice-banner" id="notice-banner" style="display:none" onclick="showNotice()">
+      <span class="nb-icon">📢</span>
+      <div class="nb-text">
+        <div class="nb-title" id="nb-title"></div>
+        <div class="nb-sub">タップして全文を見る</div>
+      </div>
+      <span class="nb-arrow">›</span>
+    </div>
     <div class="info-row">
       <button class="info-btn hw-btn" onclick="showHomework()">📋 今週の宿題</button>
       <button class="info-btn" onclick="showLessons()">📚 授業内容</button>
+      <button class="info-btn notice-btn" id="notice-btn" onclick="showNotice()">📢 お知らせ</button>
     </div>
     <button class="review-list-btn" id="review-list-btn" onclick="showReviewList()">
       復習リスト <span class="review-badge" id="review-badge">0</span>
@@ -397,6 +429,18 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--ink);min-height:100vh;bac
       <h1>今週の宿題</h1>
     </div>
     <div id="hw-content"><div class="saving">読み込み中…</div></div>
+    <button class="res-btn back" style="width:100%;margin-top:8px;"
+      onclick="showScreen('s-select');showCategories();">← 戻る</button>
+  </div>
+</div>
+
+<!-- ══ お知らせ ══ -->
+<div class="screen" id="s-notice">
+  <div class="notice-wrap">
+    <div class="page-head">
+      <h1>お知らせ</h1>
+    </div>
+    <div id="notice-content"><div class="saving">読み込み中…</div></div>
     <button class="res-btn back" style="width:100%;margin-top:8px;"
       onclick="showScreen('s-select');showCategories();">← 戻る</button>
   </div>
@@ -1764,6 +1808,7 @@ function tryStart() {
 function showCategories() {
   document.getElementById('cat-grid').style.display = 'grid';
   document.getElementById('unit-section').classList.remove('active');
+  refreshNoticeIndicator();
   const grid = document.getElementById('cat-grid');
   grid.innerHTML = '';
   QUIZ_DATA.categories.forEach(cat => {
@@ -2261,6 +2306,83 @@ function escHtml(s) {
 /* ═══════════════════════════════════════════════
    今週の宿題（社会 / 国語）
 ═══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   お知らせ
+═══════════════════════════════════════════════ */
+let noticeCache = undefined; // undefined=未取得, null=なし, {} =あり
+
+// お知らせの「版」を識別するキー（内容が更新されると変わる）
+function noticeKey(d) {
+  if (!d) return '';
+  if (d.updatedAt && typeof d.updatedAt.toMillis === 'function') return 'ts' + d.updatedAt.toMillis();
+  return 'c' + (d.title || '') + '|' + (d.date || '') + '|' + (d.body || '');
+}
+function isNoticeUnread(d) {
+  return !!d && noticeKey(d) !== (localStorage.getItem('notice_read') || '');
+}
+function markNoticeRead(d) {
+  if (d) localStorage.setItem('notice_read', noticeKey(d));
+}
+
+async function fetchNotice() {
+  if (!db) return null;
+  try {
+    const snap = await db.collection('notice').doc('main').get();
+    const d = snap.exists ? snap.data() : null;
+    if (d && d.active !== false && ((d.body && d.body.trim()) || (d.title && d.title.trim()))) {
+      return d;
+    }
+    return null;
+  } catch(e) { return null; }
+}
+
+// 単元選択画面でお知らせの有無を反映（バナー＋ボタンの赤ドット）
+async function refreshNoticeIndicator() {
+  noticeCache = await fetchNotice();
+  const banner = document.getElementById('notice-banner');
+  const btn = document.getElementById('notice-btn');
+  const unread = isNoticeUnread(noticeCache); // 未読のときだけ通知を出す
+  // ボタンの赤ドット
+  if (btn) {
+    btn.querySelector('.notice-dot')?.remove();
+    if (unread) {
+      const dot = document.createElement('span');
+      dot.className = 'notice-dot';
+      btn.appendChild(dot);
+    }
+  }
+  // バナー
+  if (banner) {
+    if (unread) {
+      document.getElementById('nb-title').textContent =
+        (noticeCache.title && noticeCache.title.trim()) ? noticeCache.title : 'お知らせがあります';
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+}
+
+async function showNotice() {
+  showScreen('s-notice');
+  const content = document.getElementById('notice-content');
+  content.innerHTML = '<div class="saving">読み込み中…</div>';
+  if (!db) { content.innerHTML = '<div class="notice-empty">お知らせを取得できません。</div>'; return; }
+  const d = (noticeCache !== undefined) ? noticeCache : await fetchNotice();
+  noticeCache = d;
+  if (!d) {
+    content.innerHTML = '<div class="notice-empty">現在、お知らせはありません。</div>';
+    return;
+  }
+  markNoticeRead(d); // 見たら通知（バナー・赤ドット）を消す
+  content.innerHTML = `
+    <div class="notice-card">
+      ${d.title && d.title.trim() ? `<div class="notice-card-title">${escHtml(d.title)}</div>` : ''}
+      ${d.date && d.date.trim() ? `<div class="notice-card-date">📅 ${escHtml(d.date)}</div>` : ''}
+      <div class="notice-card-body">${escHtml(d.body || '')}</div>
+    </div>`;
+}
+
 async function showHomework() {
   showScreen('s-homework');
   const content = document.getElementById('hw-content');
