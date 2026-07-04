@@ -2431,11 +2431,16 @@ function recordResult(q, ok, yourAns) {
   else if (q.type === 'text') correctAns = q.required ? q.required.map(r => Array.isArray(r) ? r[0] : r).join('・') : q.answer;
   else correctAns = '（順番）';
   sessionResults.push({ q: q.q, ok, yourAns, correct: correctAns });
-  if (!ok) {
-    wrongQs.push(q);
-    addToWrongBank(q);
-  } else {
-    markCorrectInBank(q);   // 復習バンクにある問題を正解 → 連続正解カウント
+  // 復習バンクの保存が失敗しても、解説表示や次の問題は必ず続行させる
+  try {
+    if (!ok) {
+      wrongQs.push(q);
+      addToWrongBank(q);
+    } else {
+      markCorrectInBank(q);   // 復習バンクにある問題を正解 → 連続正解カウント
+    }
+  } catch(e) {
+    console.warn('復習リストの更新に失敗:', e);
   }
 }
 
@@ -2458,12 +2463,22 @@ function bankDocId(name) {
 }
 
 function pushBankToCloud() {
-  if (!db || !studentName) return;
-  db.collection('wrongBanks').doc(bankDocId(studentName)).set({
-    name: studentName,
-    bank: getWrongBank(),
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).catch(e => console.warn('復習リストの保存に失敗:', e));
+  // Firestore への保存は「おまけ」。何が起きてもクイズ本体を止めない。
+  try {
+    if (!db || !studentName) return;
+    if (!(firebase && firebase.firestore && firebase.firestore.FieldValue)) return;
+    // ネットワーク処理は同期フローから切り離す
+    setTimeout(() => {
+      try {
+        // 入れ子配列（記述問題の required 等）があるため JSON 文字列で保存する
+        db.collection('wrongBanks').doc(bankDocId(studentName)).set({
+          name: studentName,
+          bankJson: JSON.stringify(getWrongBank()),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(e => console.warn('復習リストの保存に失敗:', e));
+      } catch(e) { console.warn('復習リストの保存に失敗:', e); }
+    }, 0);
+  } catch(e) { console.warn('復習リストの保存に失敗:', e); }
 }
 
 // ログイン時：クラウドの復習リストと端末のデータをマージ
@@ -2473,7 +2488,8 @@ async function syncBankOnLogin() {
   try {
     const doc = await db.collection('wrongBanks').doc(bankDocId(studentName)).get();
     if (doc.exists) {
-      const remote = doc.data().bank || [];
+      const data = doc.data();
+      const remote = data.bankJson ? JSON.parse(data.bankJson) : (data.bank || []);
       // クラウドを基本に、端末にしかない問題を追加（問題文で重複判定）
       const map = {};
       remote.forEach(q => { map[q.q] = q; });
