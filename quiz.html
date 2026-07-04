@@ -544,6 +544,19 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--ink);min-height:100vh;bac
 const CLASS_CODE = "2026YANA";
 const IMG_BASE = "クイズ画像/";   // クイズ用画像はこのフォルダにまとめて置く
 
+// 動作確認用：URL に ?test=1 を付けて開くと、結果・復習リストをクラウドに保存しない
+const TEST_MODE = new URLSearchParams(location.search).has('test');
+
+// この名前でログインすると保存されない（動作確認用）。自由に追加できます。
+const TEST_NAMES = ['テスト', 'test', '動作確認'];
+function isTestName(name) {
+  return TEST_NAMES.some(t => t.toLowerCase() === (name || '').trim().toLowerCase());
+}
+// 結果・復習リストを保存しないモードかどうか
+function noSaveMode() {
+  return TEST_MODE || isTestName(studentName);
+}
+
 const firebaseConfig = {
   apiKey: "AIzaSyBgxeXCoCC3TG001PV5bvU1bDwNPZQYiiQ",
   authDomain: "shakai-quiz.firebaseapp.com",
@@ -2120,7 +2133,22 @@ window.onload = () => {
   const savedCode = localStorage.getItem('quiz_code') || '';
   if (savedName) document.getElementById('inp-name').value = savedName;
   if (savedCode) document.getElementById('inp-code').value = savedCode;
+
+  // テストモードのときは画面上部に表示
+  if (TEST_MODE) showTestBanner();
 };
+
+function showTestBanner() {
+  if (document.getElementById('test-mode-bar')) return;   // 二重表示防止
+  const bar = document.createElement('div');
+  bar.id = 'test-mode-bar';
+  bar.textContent = '🧪 テストモード（結果・復習リストは保存されません）';
+  bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2000;background:#b8860b;'
+    + 'color:#fff;text-align:center;font-size:12px;font-weight:700;padding:5px;'
+    + "font-family:'Noto Sans JP',sans-serif;letter-spacing:.04em;";
+  document.body.appendChild(bar);
+  document.body.style.paddingTop = '26px';
+}
 
 function tryStart() {
   const name = document.getElementById('inp-name').value.trim();
@@ -2133,6 +2161,7 @@ function tryStart() {
   localStorage.setItem('quiz_name', name);
   localStorage.setItem('quiz_code', code);
   studentName = name;
+  if (isTestName(name)) showTestBanner();   // テスト用の名前なら表示
   showScreen('s-select');
   showCategories();
   syncBankOnLogin();   // クラウドの復習リストと同期
@@ -2465,6 +2494,7 @@ function bankDocId(name) {
 function pushBankToCloud() {
   // Firestore への保存は「おまけ」。何が起きてもクイズ本体を止めない。
   try {
+    if (noSaveMode()) return;   // テストモードではクラウドに保存しない
     if (!db || !studentName) return;
     if (!(firebase && firebase.firestore && firebase.firestore.FieldValue)) return;
     // ネットワーク処理は同期フローから切り離す
@@ -2483,6 +2513,7 @@ function pushBankToCloud() {
 
 // ログイン時：クラウドの復習リストと端末のデータをマージ
 async function syncBankOnLogin() {
+  if (noSaveMode()) { updateReviewBadge(); return; }   // テスト時はクラウドを触らない
   if (!db || !studentName) { updateReviewBadge(); return; }
   const local = getWrongBank();
   try {
@@ -2766,6 +2797,7 @@ function switchTab(tab) {
 async function saveToFirebase(opts = {}) {
   const incomplete = !!opts.incomplete;
   const msgEl = document.getElementById('saving-msg');
+  if (noSaveMode()) { if (msgEl) msgEl.textContent = '🧪 テストモード：結果は保存されません'; return; }
   if (!db) { if (msgEl) msgEl.textContent = '（Firebase未設定のため履歴は保存されません）'; return; }
   if (msgEl) msgEl.textContent = '結果を保存中…';
   const elapsed = Math.round((Date.now() - startTime) / 1000);
