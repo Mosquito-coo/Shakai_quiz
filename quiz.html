@@ -213,6 +213,15 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--ink);min-height:100vh;bac
 .review-launch-btn:hover{background:#6a1010;}
 .review-launch-btn:disabled{background:#ccc;cursor:default;}
 .bank-list{display:flex;flex-direction:column;gap:10px;}
+.bank-group{margin-bottom:22px;}
+.bank-group-head{display:flex;align-items:center;justify-content:space-between;
+  border-left:4px solid var(--navy);padding-left:8px;margin-bottom:8px;}
+.bank-group-title{font-family:'Noto Serif JP',serif;font-size:15px;font-weight:700;color:var(--navy);}
+.bank-group-count{font-size:12px;color:var(--light);}
+.bank-group-btn{width:100%;background:var(--navy-light);color:var(--navy);
+  border:1.5px solid var(--navy);padding:9px;font-size:13px;font-family:'Noto Serif JP',serif;
+  font-weight:700;cursor:pointer;margin-bottom:10px;transition:all .15s;}
+.bank-group-btn:hover{background:var(--navy);color:#fff;}
 .bank-item{background:var(--card);border:1.5px solid var(--border);padding:14px 16px;}
 .bank-item-unit{font-size:10px;color:var(--light);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;}
 .bank-item-q{font-family:'Noto Serif JP',serif;font-size:14px;line-height:1.7;margin-bottom:10px;}
@@ -320,6 +329,36 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--ink);min-height:100vh;bac
   padding:4px 12px;cursor:pointer;font-size:12px;font-family:'Noto Sans JP',sans-serif;}
 .html-modal-close:hover{background:#ffffff22;}
 .html-modal-frame{flex:1;width:100%;border:none;}
+
+/* ════════ 中断ダイアログ ════════ */
+.pause-modal{display:none;position:fixed;inset:0;background:#0008;z-index:1000;
+  align-items:center;justify-content:center;padding:20px;}
+.pause-modal.open{display:flex;}
+.pause-box{background:var(--card);border:1.5px solid var(--border);max-width:400px;width:100%;
+  padding:22px 22px 20px;box-shadow:0 8px 32px #0005;}
+.pause-title{font-family:'Noto Serif JP',serif;font-size:17px;font-weight:700;
+  color:var(--navy);margin-bottom:6px;}
+.pause-sub{font-size:13px;color:var(--light);margin-bottom:18px;line-height:1.7;}
+.pause-actions{display:flex;flex-direction:column;gap:10px;}
+.pause-btn{border:none;padding:12px;font-size:14px;font-family:'Noto Serif JP',serif;
+  font-weight:700;cursor:pointer;letter-spacing:.04em;transition:all .15s;}
+.pause-btn.suspend{background:var(--navy);color:#fff;}
+.pause-btn.suspend:hover{background:#162340;}
+.pause-btn.finish{background:var(--red);color:#fff;}
+.pause-btn.finish:hover{background:#6a1010;}
+.pause-btn.cancel{background:var(--card);color:var(--navy);border:1.5px solid var(--navy);}
+.pause-btn.cancel:hover{background:var(--navy-light);}
+
+/* ════════ 続きから再開バナー ════════ */
+.resume-banner{background:var(--navy);color:#fff;border:none;width:100%;padding:13px 16px;
+  cursor:pointer;display:flex;align-items:center;gap:12px;margin-bottom:12px;
+  font-family:'Noto Sans JP',sans-serif;text-align:left;transition:background .15s;}
+.resume-banner:hover{background:#162340;}
+.resume-banner .rb-icon{font-size:20px;flex-shrink:0;}
+.resume-banner .rb-text{flex:1;min-width:0;}
+.resume-banner .rb-title{font-weight:700;font-size:14px;font-family:'Noto Serif JP',serif;}
+.resume-banner .rb-sub{font-size:11px;opacity:.8;margin-top:1px;}
+.resume-banner .rb-arrow{font-weight:700;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -356,6 +395,14 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--ink);min-height:100vh;bac
       </div>
       <span class="nb-arrow">›</span>
     </div>
+    <button class="resume-banner" id="resume-banner" style="display:none" onclick="resumeQuiz()">
+      <span class="rb-icon">▶</span>
+      <div class="rb-text">
+        <div class="rb-title" id="rb-title">前回の続きから再開</div>
+        <div class="rb-sub" id="rb-sub"></div>
+      </div>
+      <span class="rb-arrow">›</span>
+    </button>
     <div class="info-row">
       <button class="info-btn hw-btn" onclick="showHomework()">📋 今週の宿題</button>
       <button class="info-btn" onclick="showLessons()">📚 授業内容</button>
@@ -470,6 +517,19 @@ body{font-family:'Noto Sans JP',sans-serif;color:var(--ink);min-height:100vh;bac
       <button class="html-modal-close" onclick="closeHtmlModal()">✕ 閉じる</button>
     </div>
     <iframe class="html-modal-frame" id="html-modal-frame" sandbox="allow-same-origin allow-scripts"></iframe>
+  </div>
+</div>
+
+<!-- ══ 中断ダイアログ ══ -->
+<div class="pause-modal" id="pause-modal" onclick="if(event.target===this)closePauseModal()">
+  <div class="pause-box">
+    <div class="pause-title">テストを中断しますか？</div>
+    <div class="pause-sub" id="pause-sub"></div>
+    <div class="pause-actions">
+      <button class="pause-btn suspend" onclick="suspendQuiz()">中断して後で続きから解く</button>
+      <button class="pause-btn finish" onclick="finishHere()">終了</button>
+      <button class="pause-btn cancel" onclick="closePauseModal()">テストを続ける</button>
+    </div>
   </div>
 </div>
 
@@ -2075,12 +2135,14 @@ function tryStart() {
   studentName = name;
   showScreen('s-select');
   showCategories();
+  syncBankOnLogin();   // クラウドの復習リストと同期
 }
 
 function showCategories() {
   document.getElementById('cat-grid').style.display = 'grid';
   document.getElementById('unit-section').classList.remove('active');
   refreshNoticeIndicator();
+  refreshResumeBanner();
   const grid = document.getElementById('cat-grid');
   grid.innerHTML = '';
   QUIZ_DATA.categories.forEach(cat => {
@@ -2138,6 +2200,7 @@ function launchQuiz(reviewMode, reviewList) {
   sessionResults = [];
   answered = false;
   startTime = Date.now();
+  clearResume();   // 新しく始めるので過去の中断データは破棄
   document.getElementById('review-banner').style.display = reviewMode ? 'block' : 'none';
   showScreen('s-quiz');
   renderQ();
@@ -2148,6 +2211,7 @@ function launchQuiz(reviewMode, reviewList) {
 ═══════════════════════════════════════════════ */
 function renderQ() {
   answered = false;
+  saveResume();   // 「これから qIndex 問目を解く」状態を保存（回答済みぶんは反映済み）
   const q = questions[qIndex];
   const total = questions.length;
   document.getElementById('bar-label').textContent = `問題 ${qIndex + 1} / ${total}`;
@@ -2370,22 +2434,81 @@ function recordResult(q, ok, yourAns) {
   if (!ok) {
     wrongQs.push(q);
     addToWrongBank(q);
+  } else {
+    markCorrectInBank(q);   // 復習バンクにある問題を正解 → 連続正解カウント
   }
 }
 
 /* ═══════════════════════════════════════════════
-   localStorage 復習バンク
+   localStorage 復習バンク（連続正解で自動卒業）
 ═══════════════════════════════════════════════ */
+const GRADUATE_STREAK = 2; // この回数だけ連続正解すると自動でリストから消える
+
 function getWrongBank() {
   return JSON.parse(localStorage.getItem('shakai_wrong_bank') || '[]');
 }
 function saveWrongBank(bank) {
   localStorage.setItem('shakai_wrong_bank', JSON.stringify(bank));
+  pushBankToCloud();   // Firestore にも保存（端末をまたいで残す）
+}
+
+/* ── Firestore 同期 ── */
+function bankDocId(name) {
+  return (name || '').replace(/\//g, '_').trim() || 'unknown';
+}
+
+function pushBankToCloud() {
+  if (!db || !studentName) return;
+  db.collection('wrongBanks').doc(bankDocId(studentName)).set({
+    name: studentName,
+    bank: getWrongBank(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(e => console.warn('復習リストの保存に失敗:', e));
+}
+
+// ログイン時：クラウドの復習リストと端末のデータをマージ
+async function syncBankOnLogin() {
+  if (!db || !studentName) { updateReviewBadge(); return; }
+  const local = getWrongBank();
+  try {
+    const doc = await db.collection('wrongBanks').doc(bankDocId(studentName)).get();
+    if (doc.exists) {
+      const remote = doc.data().bank || [];
+      // クラウドを基本に、端末にしかない問題を追加（問題文で重複判定）
+      const map = {};
+      remote.forEach(q => { map[q.q] = q; });
+      local.forEach(q => { if (!map[q.q]) map[q.q] = q; });
+      localStorage.setItem('shakai_wrong_bank', JSON.stringify(Object.values(map)));
+      pushBankToCloud();          // マージ結果を書き戻す
+    } else if (local.length) {
+      pushBankToCloud();          // 初回：端末のデータをアップロード
+    }
+  } catch(e) {
+    console.warn('復習リストの読み込みに失敗:', e);
+  }
+  updateReviewBadge();
 }
 function addToWrongBank(q) {
   const bank = getWrongBank();
-  if (!bank.find(item => item.q === q.q)) {
-    bank.push({ ...q, _unitTitle: currentUnit.title, _unitId: currentUnit.id });
+  const existing = bank.find(item => item.q === q.q);
+  if (existing) {
+    existing._streak = 0;                          // また間違えたので連続正解をリセット
+    existing._wrongCount = (existing._wrongCount || 1) + 1;
+  } else {
+    bank.push({ ...q, _unitTitle: currentUnit.title, _unitId: currentUnit.id,
+                _streak: 0, _wrongCount: 1 });
+  }
+  saveWrongBank(bank);
+  updateReviewBadge();
+}
+function markCorrectInBank(q) {
+  const bank = getWrongBank();
+  const item = bank.find(it => it.q === q.q);
+  if (!item) return;                               // バンクにない問題は対象外
+  item._streak = (item._streak || 0) + 1;
+  if (item._streak >= GRADUATE_STREAK) {
+    saveWrongBank(bank.filter(it => it.q !== q.q)); // 卒業（自動削除）
+  } else {
     saveWrongBank(bank);
   }
   updateReviewBadge();
@@ -2400,6 +2523,55 @@ function updateReviewBadge() {
   if (badge) badge.textContent = count;
 }
 
+// 単元IDから subtitle（世界史②など）を引く
+function getUnitSubtitle(unitId) {
+  for (const cat of QUIZ_DATA.categories) {
+    const u = (cat.units || []).find(u => u.id === unitId);
+    if (u) return u.subtitle || '';
+  }
+  return '';
+}
+
+// 元の問題データでの単元の並び順（単元選択画面と同じ）を index 化
+function getUnitOrder(unitId) {
+  let idx = 0;
+  for (const cat of QUIZ_DATA.categories) {
+    const units = [...(cat.units || [])].sort((a,b) => (a.displayOrder||99)-(b.displayOrder||99));
+    for (const u of units) {
+      if (u.id === unitId) return idx;
+      idx++;
+    }
+  }
+  return 9999; // 元データに無い単元は末尾へ
+}
+
+// 優先度順に並べる：間違えた回数が多い・連続正解が少ない問題を先に出す
+function sortByPriority(items) {
+  return [...items].sort((a, b) => {
+    const scoreA = (a._wrongCount || 1) * 2 - (a._streak || 0);
+    const scoreB = (b._wrongCount || 1) * 2 - (b._streak || 0);
+    if (scoreB !== scoreA) return scoreB - scoreA;   // 優先度が高い順
+    return Math.random() - 0.5;                        // 同点は毎回ランダム
+  });
+}
+
+// 復習バンクを単元ごとにグループ化（元の単元順に並べる）
+function groupWrongBank(bank) {
+  const groups = [];
+  const map = {};
+  bank.forEach(q => {
+    const key = q._unitId || q._unitTitle || 'other';
+    if (!map[key]) {
+      map[key] = { key, id: q._unitId || '', title: q._unitTitle || 'その他', items: [] };
+      groups.push(map[key]);
+    }
+    map[key].items.push(q);
+  });
+  groups.sort((a, b) => getUnitOrder(a.id) - getUnitOrder(b.id));
+  return groups;
+}
+
+// 復習リスト（単元カード一覧）
 function showReviewList() {
   const bank = getWrongBank();
   const content = document.getElementById('review-list-content');
@@ -2407,27 +2579,72 @@ function showReviewList() {
     content.innerHTML = `
       <div class="review-empty">復習リストは空です。<br>問題を解いて間違えた問題が<br>自動で追加されます。</div>
       <button class="res-btn back" style="width:100%;margin-top:20px;" onclick="showScreen('s-select');showCategories();">← 単元選択に戻る</button>`;
-  } else {
-    content.innerHTML = `
-      <div class="review-count-info">${bank.length}問の間違えた問題があります</div>
-      <button class="review-launch-btn" onclick="launchBankQuiz()">まとめて復習する（${bank.length}問）</button>
-      <div class="bank-list" id="bank-list"></div>
-      <button class="res-btn back" style="width:100%;margin-top:20px;" onclick="showScreen('s-select');showCategories();">← 単元選択に戻る</button>`;
-    const bankList = document.getElementById('bank-list');
-    bank.forEach(q => {
-      const item = document.createElement('div');
-      item.className = 'bank-item';
-      item.innerHTML = `
-        <div class="bank-item-unit">${q._unitTitle || ''}</div>
-        <div class="bank-item-q">${q.q}</div>
-        <button class="understood-btn">理解した ✓</button>`;
-      item.querySelector('.understood-btn').addEventListener('click', () => {
-        removeFromWrongBank(q.q);
-        showReviewList();
-      });
-      bankList.appendChild(item);
-    });
+    showScreen('s-review-list');
+    return;
   }
+  const groups = groupWrongBank(bank);
+  const cards = groups.map(g => {
+    const sub = getUnitSubtitle(g.id);
+    return `
+      <div class="unit-card" onclick="showReviewUnit('${g.key.replace(/'/g,"\\'")}')">
+        <div>
+          <div class="unit-card-title">${escHtml(g.title)}</div>
+          ${sub ? `<div class="unit-card-sub">${escHtml(sub)}</div>` : ''}
+          <div class="unit-card-q">間違えた問題 ${g.items.length}問</div>
+        </div>
+        <div class="unit-card-arrow">›</div>
+      </div>`;
+  }).join('');
+
+  content.innerHTML = `
+    <div class="review-count-info">${bank.length}問の間違えた問題があります<br>
+      <span style="font-size:12px;">単元を選ぶか、まとめて復習できます</span></div>
+    <button class="review-launch-btn" onclick="launchBankQuiz()">すべてまとめて復習する（${bank.length}問）</button>
+    <div class="unit-cards">${cards}</div>
+    <button class="res-btn back" style="width:100%;margin-top:20px;" onclick="showScreen('s-select');showCategories();">← 単元選択に戻る</button>`;
+  showScreen('s-review-list');
+}
+
+// 復習リスト：単元ごとの問題一覧（詳細）
+function showReviewUnit(unitKey) {
+  const bank = getWrongBank();
+  const items = bank.filter(q => (q._unitId || q._unitTitle || 'other') === unitKey);
+  if (items.length === 0) { showReviewList(); return; }
+  const title = items[0]._unitTitle || '復習';
+  const content = document.getElementById('review-list-content');
+  content.innerHTML = `
+    <div class="unit-sec-head" style="margin-bottom:14px;">
+      <button class="back-cat-btn" onclick="showReviewList()">← 単元一覧に戻る</button>
+      <div class="unit-sec-title">${escHtml(title)}</div>
+    </div>
+    <div class="review-count-info" style="margin-bottom:12px;">
+      <span style="font-size:12px;">復習で${GRADUATE_STREAK}回連続正解すると自動で消えます</span></div>
+    <button class="review-launch-btn" onclick="launchBankQuizForUnit('${unitKey.replace(/'/g,"\\'")}')">この単元を復習する（${items.length}問）</button>
+    <div class="bank-list" id="bank-list"></div>`;
+  const bankList = document.getElementById('bank-list');
+  sortByPriority(items).forEach(q => {   // 苦手な問題を上に
+    const streak = q._streak || 0;
+    const remain = Math.max(GRADUATE_STREAK - streak, 0);
+    const wrongCount = q._wrongCount || 1;
+    const progress = streak > 0
+      ? `<span style="color:var(--green);">あと${remain}回（${streak}/${GRADUATE_STREAK}）</span>`
+      : `<span style="color:var(--light);">あと${GRADUATE_STREAK}回</span>`;
+    const weakTag = wrongCount >= 2
+      ? `<span style="display:inline-block;font-size:10px;font-weight:700;color:var(--red);border:1px solid var(--red);background:var(--red-light);padding:1px 6px;margin-right:6px;">苦手 ×${wrongCount}</span>`
+      : '';
+    const item = document.createElement('div');
+    item.className = 'bank-item';
+    item.innerHTML = `
+      <div style="margin-bottom:6px;">${weakTag}<span style="font-size:11px;color:var(--light);">間違えた回数 ${wrongCount}回</span></div>
+      <div class="bank-item-q">${q.q}</div>
+      <div style="font-size:11px;margin-bottom:10px;">${progress}</div>
+      <button class="understood-btn">理解した ✓</button>`;
+    item.querySelector('.understood-btn').addEventListener('click', () => {
+      removeFromWrongBank(q.q);
+      showReviewUnit(unitKey);   // 同じ単元の一覧を再描画（空になれば一覧へ）
+    });
+    bankList.appendChild(item);
+  });
   showScreen('s-review-list');
 }
 
@@ -2435,7 +2652,16 @@ function launchBankQuiz() {
   const bank = getWrongBank();
   if (bank.length === 0) return;
   currentUnit = { id: 'review-bank', title: '復習リスト', questions: bank };
-  launchQuiz(true, shuffle(bank));
+  launchQuiz(true, sortByPriority(bank));   // 苦手な問題を優先
+}
+
+function launchBankQuizForUnit(unitKey) {
+  const bank = getWrongBank();
+  const items = bank.filter(q => (q._unitId || q._unitTitle || 'other') === unitKey);
+  if (items.length === 0) return;
+  const title = items[0]._unitTitle || '復習';
+  currentUnit = { id: 'review-bank', title: `復習：${title}`, questions: items };
+  launchQuiz(true, sortByPriority(items));   // 苦手な問題を優先
 }
 
 /* ═══════════════════════════════════════════════
@@ -2448,6 +2674,7 @@ function nextQ() {
 }
 
 function endQuiz() {
+  clearResume();   // 最後まで解いたので中断データは不要
   showScreen('s-result');
   buildResult();
   saveToFirebase();
@@ -2520,26 +2747,35 @@ function switchTab(tab) {
 /* ═══════════════════════════════════════════════
    Firebase 保存
 ═══════════════════════════════════════════════ */
-async function saveToFirebase() {
-  if (!db) { document.getElementById('saving-msg').textContent = '（Firebase未設定のため履歴は保存されません）'; return; }
-  document.getElementById('saving-msg').textContent = '結果を保存中…';
+async function saveToFirebase(opts = {}) {
+  const incomplete = !!opts.incomplete;
+  const msgEl = document.getElementById('saving-msg');
+  if (!db) { if (msgEl) msgEl.textContent = '（Firebase未設定のため履歴は保存されません）'; return; }
+  if (msgEl) msgEl.textContent = '結果を保存中…';
   const elapsed = Math.round((Date.now() - startTime) / 1000);
+  // 途中終了時は「回答済みの問題数」を総数として記録する
+  const total = incomplete ? sessionResults.length : questions.length;
   try {
     await db.collection('results').add({
       name: studentName,
       unit: currentUnit.id,
       unitTitle: currentUnit.title,
       score,
-      total: questions.length,
+      total,
+      answered: sessionResults.length,
+      questionCount: questions.length,
       wrongCount: wrongQs.length,
       timeSeconds: elapsed,
       mode: isReviewMode ? 'review' : 'normal',
+      incomplete,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
-    document.getElementById('saving-msg').textContent = '結果を保存しました。';
+    if (msgEl) msgEl.textContent = '結果を保存しました。';
+    return true;
   } catch(e) {
-    document.getElementById('saving-msg').textContent = '保存に失敗しました。';
+    if (msgEl) msgEl.textContent = '保存に失敗しました。';
     console.error(e);
+    return false;
   }
 }
 
@@ -2561,7 +2797,99 @@ function goStart() {
 }
 
 function confirmBack() {
-  if (confirm('テストを終了して最初に戻りますか？（記録は保存されません）')) goStart();
+  // まだ1問も答えていない場合は中断する意味がないのでそのまま戻る
+  if (sessionResults.length === 0) {
+    if (confirm('テストを終了して最初に戻りますか？')) { clearResume(); goStart(); }
+    return;
+  }
+  document.getElementById('pause-sub').textContent =
+    `現在 ${questions.length}問中 ${qIndex + 1}問目（正解 ${score}問）です。`;
+  document.getElementById('pause-modal').classList.add('open');
+}
+
+function closePauseModal() {
+  document.getElementById('pause-modal').classList.remove('open');
+}
+
+// 中断して後で続きから
+function suspendQuiz() {
+  saveResume();
+  closePauseModal();
+  goStart();
+}
+
+// ここまでで終了して記録を保存
+async function finishHere() {
+  closePauseModal();
+  clearResume();
+  await saveToFirebase({ incomplete: true });
+  goStart();
+}
+
+/* ═══════════════════════════════════════════════
+   中断・再開（localStorage）
+═══════════════════════════════════════════════ */
+const RESUME_KEY = 'shakai_quiz_resume';
+
+function saveResume() {
+  if (!currentUnit) return;
+  const state = {
+    name: studentName,
+    unitId: currentUnit.id,
+    unitTitle: currentUnit.title,
+    isReviewMode,
+    questions,          // 出題順そのまま保持
+    qIndex,
+    score,
+    wrongQs,
+    sessionResults,
+    elapsedMs: startTime ? (Date.now() - startTime) : 0,
+    savedAt: Date.now()
+  };
+  try { localStorage.setItem(RESUME_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function getResume() {
+  try { return JSON.parse(localStorage.getItem(RESUME_KEY) || 'null'); } catch(e) { return null; }
+}
+
+function clearResume() {
+  localStorage.removeItem(RESUME_KEY);
+  const banner = document.getElementById('resume-banner');
+  if (banner) banner.style.display = 'none';
+}
+
+// 単元選択画面で「続きから」バナーを表示
+function refreshResumeBanner() {
+  const banner = document.getElementById('resume-banner');
+  if (!banner) return;
+  const r = getResume();
+  // 別の生徒の中断データは表示しない
+  if (!r || !r.questions || r.name !== studentName) {
+    banner.style.display = 'none';
+    return;
+  }
+  document.getElementById('rb-title').textContent = `前回の続きから再開：${r.unitTitle || ''}`;
+  document.getElementById('rb-sub').textContent =
+    `${r.questions.length}問中 ${Math.min(r.qIndex + 1, r.questions.length)}問目から`;
+  banner.style.display = 'flex';
+}
+
+function resumeQuiz() {
+  const r = getResume();
+  if (!r || !r.questions || r.name !== studentName) { refreshResumeBanner(); return; }
+  currentUnit = { id: r.unitId, title: r.unitTitle, questions: r.questions };
+  isReviewMode   = !!r.isReviewMode;
+  questions      = r.questions;
+  qIndex         = r.qIndex || 0;
+  score          = r.score || 0;
+  wrongQs        = r.wrongQs || [];
+  sessionResults = r.sessionResults || [];
+  answered       = false;
+  startTime      = Date.now() - (r.elapsedMs || 0);   // 経過時間を引き継ぐ
+  document.getElementById('review-banner').style.display = isReviewMode ? 'block' : 'none';
+  showScreen('s-quiz');
+  renderQ();
 }
 
 function showScreen(id) {
